@@ -3,8 +3,12 @@ import {
     encrypt,
     domains,
     conditions,
+    ThresholdMessageKit,
 } from "@nucypher/taco";
-import { BrowserProvider, JsonRpcProvider } from "ethers";
+import {
+    Web3Provider,
+    type ExternalProvider,
+} from "@ethersproject/providers";
 
 const encoder = new TextEncoder();
 
@@ -22,10 +26,6 @@ function buildBuyerAccessCondition(tokenId: number, registryAddress: string) {
         import.meta.env.VITE_TACO_CONDITION_CHAIN_ID || "97"
     );
 
-    // NOTE:
-    // Depending on the exact taco-web version, the ContractCondition constructor
-    // namespace may differ slightly. If TypeScript complains here, check the
-    // installed package exports / examples folder and adjust this one line.
     return new conditions.base.contract.ContractCondition({
         contractAddress: registryAddress,
         chain: conditionChainId,
@@ -42,20 +42,19 @@ function buildBuyerAccessCondition(tokenId: number, registryAddress: string) {
         },
         parameters: [tokenId, ":userAddress"],
         returnValueTest: {
-            comparator: "=",
-            value: "1",
+        comparator: "==",
+        value: "1",
         },
     });
 }
 
 export async function tacoEncryptPlaintext(params: {
-    walletProvider: BrowserProvider;
     plaintext: string;
     registryAddress: string;
     tokenId: number;
     ritualId?: number;
-}) {
-    const { walletProvider, plaintext, registryAddress, tokenId } = params;
+    }): Promise<ThresholdMessageKit> {
+    const { plaintext, registryAddress, tokenId } = params;
 
     const ritualId = Number(
         params.ritualId ?? import.meta.env.VITE_TACO_RITUAL_ID ?? "0"
@@ -65,25 +64,26 @@ export async function tacoEncryptPlaintext(params: {
         throw new Error("Missing VITE_TACO_RITUAL_ID");
     }
 
-    const rpcUrl = import.meta.env.VITE_TACO_RPC_URL;
-    if (!rpcUrl) {
-        throw new Error("Missing VITE_TACO_RPC_URL");
+    if (!window.ethereum) {
+        throw new Error("MetaMask is not installed");
     }
 
     await ensureTacoInitialized();
 
-    const signer = await walletProvider.getSigner();
-    const rpcProvider = new JsonRpcProvider(rpcUrl);
-    const plaintextBytes = encoder.encode(plaintext);
+    const web3Provider = new Web3Provider(
+        window.ethereum as unknown as ExternalProvider
+    );
+
+    type TacoEncryptProvider = Parameters<typeof encrypt>[0];
+    type TacoEncryptSigner = Parameters<typeof encrypt>[5];
 
     const accessCondition = buildBuyerAccessCondition(tokenId, registryAddress);
+    const plaintextBytes = encoder.encode(plaintext);
 
-    // NOTE:
-    // Some taco-web versions slightly change the encrypt() signature.
-    // If your installed version complains, let TypeScript intellisense guide
-    // the parameter order for your package version.
+    const signer = web3Provider.getSigner() as unknown as TacoEncryptSigner;
+
     const messageKit = await encrypt(
-        rpcProvider,
+        web3Provider as unknown as TacoEncryptProvider,
         domains.TESTNET,
         plaintextBytes,
         accessCondition,
