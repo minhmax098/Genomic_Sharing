@@ -2,6 +2,22 @@ import { useState } from "react";
 import { connectWallet, switchToBscTestnet } from "../lib/wallet";
 import { getContractAddresses } from "../lib/blockchain";
 
+type ErrorWithMessage = {
+    message?: string;
+};
+
+function getErrorMessage(error: unknown, fallback: string){
+    if(
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error
+    )
+    {
+        return (error as ErrorWithMessage).message || fallback;
+    }
+    return fallback;
+}
+
 export default function OwnerDemo() {
     const [address, setAddress] = useState("");
     const [plaintext, setPlaintext] = useState("Hello SGD from Owner A");
@@ -12,12 +28,12 @@ export default function OwnerDemo() {
 
     const handleConnect = async () => {
         try {
-        await switchToBscTestnet();
-        const { address } = await connectWallet();
-        setAddress(address);
-        setStatus("Owner wallet connected");
-        } catch (error: any) {
-        setStatus(error.message || "Failed to connect owner wallet");
+            await switchToBscTestnet();
+            const { address } = await connectWallet();
+            setAddress(address);
+            setStatus("Owner wallet connected");
+        } catch (error: unknown) {
+            setStatus(getErrorMessage(error, "Failed to connect owner wallet"));
         }
     };
 
@@ -28,9 +44,9 @@ export default function OwnerDemo() {
 
     const handlePrepareTacoEncrypt = async () => {
         try {
-        setStatus("TACo encrypt step will be added next");
-        } catch (error: any) {
-        setStatus(error.message || "Failed to prepare TACo encryption");
+            setStatus("TACo encrypt step will be added next");
+        } catch (error: unknown) {
+            setStatus(getErrorMessage(error, "Failed to prepare TACo encryption"));
         }
     };
 
@@ -56,7 +72,7 @@ export default function OwnerDemo() {
 
         <div style={{ marginTop: 20, marginBottom: 16 }}>
             <label>
-            Demo Plaintext
+                Demo Plaintext
             <br />
             <textarea
                 rows={6}
@@ -69,7 +85,7 @@ export default function OwnerDemo() {
 
         <div style={{ marginBottom: 16 }}>
             <label>
-            Select SGD File:{" "}
+                Select SGD File:{" "}
             <input type="file" onChange={handleFileChange} />
             </label>
         </div>
@@ -89,11 +105,11 @@ export default function OwnerDemo() {
         <div style={{ marginTop: 24 }}>
             <h3>Planned TACo Flow</h3>
             <ol>
-            <li>Owner encrypts SGD with TACo policy</li>
-            <li>Encrypted SGD is uploaded to IPFS</li>
-            <li>CID is registered on-chain</li>
-            <li>Buyer purchases access</li>
-            <li>Buyer fetches encrypted SGD and decrypts with TACo</li>
+                <li>Owner encrypts SGD with TACo policy</li>
+                <li>Encrypted SGD is uploaded to IPFS</li>
+                <li>CID is registered on-chain</li>
+                <li>Buyer purchases access</li>
+                <li>Buyer fetches encrypted SGD and decrypts with TACo</li>
             </ol>
         </div>
         </div>
