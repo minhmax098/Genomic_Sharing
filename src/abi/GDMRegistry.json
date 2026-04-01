@@ -1,0 +1,760 @@
+[
+    {
+        "inputs": [
+        {
+            "internalType": "address",
+            "name": "nftAddress",
+            "type": "address"
+        },
+        {
+            "internalType": "address",
+            "name": "initialOwner",
+            "type": "address"
+        }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [],
+        "name": "AlreadyPurchased",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InactiveRecord",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NotRegistrar",
+        "type": "error"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+        }
+        ],
+        "name": "OwnableInvalidOwner",
+        "type": "error"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "address",
+            "name": "account",
+            "type": "address"
+        }
+        ],
+        "name": "OwnableUnauthorizedAccount",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "PaymentFailed",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "RecordNotFound",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ReentrancyGuardReentrantCall",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "Unauthorized",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "WrongPayment",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ZeroAddress",
+        "type": "error"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+        {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        },
+        {
+            "indexed": false,
+            "internalType": "string",
+            "name": "newCondition",
+            "type": "string"
+        }
+        ],
+        "name": "AccessConditionUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+        {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        },
+        {
+            "indexed": false,
+            "internalType": "string",
+            "name": "newCid",
+            "type": "string"
+        }
+        ],
+        "name": "CIDUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+        {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        },
+        {
+            "indexed": true,
+            "internalType": "address",
+            "name": "buyer",
+            "type": "address"
+        },
+        {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+        }
+        ],
+        "name": "FullAccessPurchased",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+        {
+            "indexed": true,
+            "internalType": "address",
+            "name": "previousOwner",
+            "type": "address"
+        },
+        {
+            "indexed": true,
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+        }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+        {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        },
+        {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "newPrice",
+            "type": "uint256"
+        }
+        ],
+        "name": "PriceUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+        {
+            "indexed": true,
+            "internalType": "address",
+            "name": "newRegistrar",
+            "type": "address"
+        }
+        ],
+        "name": "RegistrarUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+        {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        }
+        ],
+        "name": "SGDDeactivated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+        {
+            "indexed": true,
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        },
+        {
+            "indexed": true,
+            "internalType": "address",
+            "name": "initialOwner",
+            "type": "address"
+        },
+        {
+            "indexed": false,
+            "internalType": "string",
+            "name": "sgdId",
+            "type": "string"
+        },
+        {
+            "indexed": false,
+            "internalType": "string",
+            "name": "cid",
+            "type": "string"
+        },
+        {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+        }
+        ],
+        "name": "SGDRegistered",
+        "type": "event"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        }
+        ],
+        "name": "deactivateSGD",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        }
+        ],
+        "name": "getCID",
+        "outputs": [
+        {
+            "internalType": "string",
+            "name": "",
+            "type": "string"
+        }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        }
+        ],
+        "name": "getFullRecord",
+        "outputs": [
+        {
+            "components": [
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "sgdId",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "rgdId",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "cid",
+                "type": "string"
+            },
+            {
+                "internalType": "address",
+                "name": "registeredOwner",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "accessCondition",
+                "type": "string"
+            },
+            {
+                "internalType": "uint256",
+                "name": "price",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "collectionDate",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "sampleType",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "patientRef",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "consentCode",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "sampleHash",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "encryptionScheme",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "sequencingInfo",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "signatureRef",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "encHash",
+                "type": "string"
+            },
+            {
+                "internalType": "uint256",
+                "name": "createdAt",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "active",
+                "type": "bool"
+            }
+            ],
+            "internalType": "struct GDMRegistry.SGDRecord",
+            "name": "",
+            "type": "tuple"
+        }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        }
+        ],
+        "name": "getPublicRecord",
+        "outputs": [
+        {
+            "components": [
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "sgdId",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "rgdId",
+                "type": "string"
+            },
+            {
+                "internalType": "address",
+                "name": "currentOwner",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "accessCondition",
+                "type": "string"
+            },
+            {
+                "internalType": "uint256",
+                "name": "price",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "collectionDate",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "sampleType",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "patientRef",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "consentCode",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "sampleHash",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "encryptionScheme",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "sequencingInfo",
+                "type": "string"
+            },
+            {
+                "internalType": "bool",
+                "name": "active",
+                "type": "bool"
+            }
+            ],
+            "internalType": "struct GDMRegistry.PublicRecord",
+            "name": "",
+            "type": "tuple"
+        }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+        },
+        {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+        }
+        ],
+        "name": "hasPurchased",
+        "outputs": [
+        {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
+        }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "nextTokenId",
+        "outputs": [
+        {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+        }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+        {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+        }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        }
+        ],
+        "name": "purchaseFullAccess",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+        {
+            "components": [
+            {
+                "internalType": "address",
+                "name": "initialOwner",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "sgdId",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "rgdId",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "cid",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "accessCondition",
+                "type": "string"
+            },
+            {
+                "internalType": "uint256",
+                "name": "price",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "collectionDate",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "sampleType",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "patientRef",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "consentCode",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "sampleHash",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "encryptionScheme",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "sequencingInfo",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "signatureRef",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "encHash",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "tokenURI",
+                "type": "string"
+            }
+            ],
+            "internalType": "struct GDMRegistry.RegisterInput",
+            "name": "input",
+            "type": "tuple"
+        }
+        ],
+        "name": "registerSGD",
+        "outputs": [
+        {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "registrar",
+        "outputs": [
+        {
+            "internalType": "address",
+            "name": "",
+            "type": "address"
+        }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "renounceOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        },
+        {
+            "internalType": "string",
+            "name": "newCondition",
+            "type": "string"
+        }
+        ],
+        "name": "setAccessCondition",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        },
+        {
+            "internalType": "uint256",
+            "name": "newPrice",
+            "type": "uint256"
+        }
+        ],
+        "name": "setPrice",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "address",
+            "name": "newRegistrar",
+            "type": "address"
+        }
+        ],
+        "name": "setRegistrar",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "sgdNft",
+        "outputs": [
+        {
+            "internalType": "contract SGDNFT",
+            "name": "",
+            "type": "address"
+        }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "address",
+            "name": "newOwner",
+            "type": "address"
+        }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+        {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+        },
+        {
+            "internalType": "string",
+            "name": "newCid",
+            "type": "string"
+        }
+        ],
+        "name": "updateCID",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]
