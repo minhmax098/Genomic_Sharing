@@ -1,11 +1,7 @@
-import {
-  useState,
-  type ChangeEvent,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useState, type ChangeEvent } from "react";
 import { connectWallet, switchToBscTestnet } from "../lib/wallet";
 import { getContractAddresses } from "../lib/blockchain";
+import { tacoEncryptPlaintext } from "../lib/tacoEncrypt";
 
 type ErrorWithMessage = {
   message?: string;
@@ -23,19 +19,13 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-type OwnerDemoProps = {
-  messageKit: unknown | null;
-  setMessageKit: Dispatch<SetStateAction<unknown | null>>;
-};
-
-export default function OwnerDemo({
-  messageKit,
-  setMessageKit,
-}: OwnerDemoProps) {
+export default function OwnerDemo() {
   const [address, setAddress] = useState("");
   const [plaintext, setPlaintext] = useState("Hello SGD from Owner A");
   const [selectedFileName, setSelectedFileName] = useState("");
   const [status, setStatus] = useState("");
+  const [tokenId, setTokenId] = useState(1);
+  const [messageKitReady, setMessageKitReady] = useState(false);
 
   const { GDMREGISTRY_ADDRESS, SGDNFT_ADDRESS } = getContractAddresses();
 
@@ -57,16 +47,44 @@ export default function OwnerDemo({
 
   const handlePrepareTacoEncrypt = async () => {
     try {
-      // Tạm thời chỉ để test props/state hoạt động
-      // Sau này bạn thay bằng tacoEncryptPlaintext(...)
-      setMessageKit({
-        demo: true,
+      if (!address) {
+        setStatus("Connect owner wallet first");
+        return;
+      }
+
+      setStatus("Preparing TACo encryption...");
+
+      const kit = await tacoEncryptPlaintext({
         plaintext,
+        registryAddress: GDMREGISTRY_ADDRESS,
+        tokenId,
       });
 
-      setStatus("TACo encrypt step placeholder is ready");
+      await fetch("http://localhost:3001/demo/messagekit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(kit),
+      });
+
+      setMessageKitReady(true);
+      setStatus("TACo encryption successful and stored on server");
     } catch (error: unknown) {
       setStatus(getErrorMessage(error, "Failed to prepare TACo encryption"));
+    }
+  };
+
+  const handleClearServerMessageKit = async () => {
+    try {
+      await fetch("http://localhost:3001/demo/messagekit", {
+        method: "DELETE",
+      });
+
+      setMessageKitReady(false);
+      setStatus("Stored messageKit cleared from server");
+    } catch (error: unknown) {
+      setStatus(getErrorMessage(error, "Failed to clear stored messageKit"));
     }
   };
 
@@ -89,6 +107,17 @@ export default function OwnerDemo({
       <p>
         <strong>SGDNFT:</strong> {SGDNFT_ADDRESS}
       </p>
+
+      <div style={{ marginBottom: 16 }}>
+        <label>
+          Token ID:{" "}
+          <input
+            type="number"
+            value={tokenId}
+            onChange={(e) => setTokenId(Number(e.target.value))}
+          />
+        </label>
+      </div>
 
       <div style={{ marginTop: 20, marginBottom: 16 }}>
         <label>
@@ -115,6 +144,7 @@ export default function OwnerDemo({
 
       <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
         <button onClick={handlePrepareTacoEncrypt}>Prepare TACo Encrypt</button>
+        <button onClick={handleClearServerMessageKit}>Clear Stored MessageKit</button>
       </div>
 
       <p style={{ marginTop: 16 }}>
@@ -122,17 +152,17 @@ export default function OwnerDemo({
       </p>
 
       <p>
-        <strong>MessageKit Ready:</strong> {messageKit ? "Yes" : "No"}
+        <strong>MessageKit Ready:</strong> {messageKitReady ? "Yes" : "No"}
       </p>
 
       <div style={{ marginTop: 24 }}>
         <h3>Planned TACo Flow</h3>
         <ol>
           <li>Owner encrypts SGD with TACo policy</li>
-          <li>Encrypted SGD is uploaded to IPFS</li>
-          <li>CID is registered on-chain</li>
+          <li>Encrypted SGD is stored on server temporarily for demo</li>
           <li>Buyer purchases access</li>
-          <li>Buyer fetches encrypted SGD and decrypts with TACo</li>
+          <li>Buyer loads encrypted payload from server</li>
+          <li>Buyer decrypts with TACo using a different wallet</li>
         </ol>
       </div>
     </div>

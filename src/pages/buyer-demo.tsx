@@ -5,6 +5,7 @@ import {
   hasPurchased,
   purchaseFullAccess,
 } from "../lib/blockchain";
+import { tacoDecryptToString } from "../lib/tacoDecrypt";
 
 type ErrorWithMessage = {
   message?: string;
@@ -22,26 +23,24 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-type BuyerDemoProps = {
-  messageKit: unknown | null;
-};
-
-export default function BuyerDemo({ messageKit }: BuyerDemoProps) {
+export default function BuyerDemo() {
   const [address, setAddress] = useState("");
   const [tokenId, setTokenId] = useState(1);
   const [record, setRecord] = useState<Record<string, unknown> | null>(null);
   const [purchased, setPurchased] = useState("");
   const [txHash, setTxHash] = useState("");
   const [status, setStatus] = useState("");
+  const [messageKitAvailable, setMessageKitAvailable] = useState(false);
+  const [decryptedText, setDecryptedText] = useState("");
 
   const handleConnect = async () => {
     try {
       await switchToBscTestnet();
       const { address } = await connectWallet();
       setAddress(address);
-      setStatus("Wallet connected");
+      setStatus("Buyer wallet connected");
     } catch (error: unknown) {
-      setStatus(getErrorMessage(error, "Failed to connect wallet"));
+      setStatus(getErrorMessage(error, "Failed to connect buyer wallet"));
     }
   };
 
@@ -59,7 +58,7 @@ export default function BuyerDemo({ messageKit }: BuyerDemoProps) {
   const handleCheckPurchased = async () => {
     try {
       if (!address) {
-        setStatus("Connect wallet first");
+        setStatus("Connect buyer wallet first");
         return;
       }
 
@@ -74,12 +73,79 @@ export default function BuyerDemo({ messageKit }: BuyerDemoProps) {
 
   const handlePurchase = async () => {
     try {
+      if (!address) {
+        setStatus("Connect buyer wallet first");
+        return;
+      }
+
+      if (purchased === "true") {
+        setStatus("Buyer already purchased access");
+        return;
+      }
+
       setStatus("Sending purchase transaction...");
       const hash = await purchaseFullAccess(tokenId);
       setTxHash(hash);
       setStatus("Purchase successful");
+
+      const result = await hasPurchased(tokenId, address);
+      setPurchased(String(result));
     } catch (error: unknown) {
       setStatus(getErrorMessage(error, "Purchase failed"));
+    }
+  };
+
+  const handleLoadMessageKit = async () => {
+    try {
+      setStatus("Loading encrypted payload from server...");
+
+      const response = await fetch("http://localhost:3001/demo/messagekit");
+
+      if (!response.ok) {
+        throw new Error("No messageKit available on server");
+      }
+
+      const _kit = await response.json();
+      setMessageKitAvailable(Boolean(_kit));
+      setStatus("Encrypted payload loaded from server");
+    } catch (error: unknown) {
+      setMessageKitAvailable(false);
+      setStatus(getErrorMessage(error, "Failed to load messageKit"));
+    }
+  };
+
+  const handleTacoDecrypt = async () => {
+    try {
+      if (!address) {
+        setStatus("Connect buyer wallet first");
+        return;
+      }
+
+      if (purchased !== "true") {
+        setStatus("Buyer has not satisfied access condition yet");
+        return;
+      }
+
+      setStatus("Loading encrypted payload from server...");
+
+      const response = await fetch("http://localhost:3001/demo/messagekit");
+      if (!response.ok) {
+        throw new Error("No messageKit available on server");
+      }
+
+      const kit = await response.json();
+
+      setMessageKitAvailable(Boolean(kit));
+      setStatus("Decrypting with TACo...");
+
+      const text = await tacoDecryptToString({
+        messageKit: kit as never,
+      });
+
+      setDecryptedText(text);
+      setStatus("TACo decrypt successful");
+    } catch (error: unknown) {
+      setStatus(getErrorMessage(error, "TACo decrypt failed"));
     }
   };
 
@@ -109,7 +175,11 @@ export default function BuyerDemo({ messageKit }: BuyerDemoProps) {
       <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
         <button onClick={handleGetRecord}>Get Public Record</button>
         <button onClick={handleCheckPurchased}>Check Purchased</button>
-        <button onClick={handlePurchase}>Purchase Full Access</button>
+        <button onClick={handlePurchase} disabled={purchased === "true"}>
+          Purchase Full Access
+        </button>
+        <button onClick={handleLoadMessageKit}>Load Encrypted Data</button>
+        <button onClick={handleTacoDecrypt}>TACo Decrypt</button>
       </div>
 
       <p>
@@ -125,7 +195,7 @@ export default function BuyerDemo({ messageKit }: BuyerDemoProps) {
       </p>
 
       <p>
-        <strong>MessageKit Available:</strong> {messageKit ? "Yes" : "No"}
+        <strong>MessageKit Available:</strong> {messageKitAvailable ? "Yes" : "No"}
       </p>
 
       {record !== null && (
@@ -150,11 +220,19 @@ export default function BuyerDemo({ messageKit }: BuyerDemoProps) {
       )}
 
       <div style={{ marginTop: 24 }}>
-        <h3>Next TACo Step</h3>
-        <p>
-          After purchase, Buyer will fetch encrypted SGD from IPFS and use TACo
-          to decrypt it if the access condition is satisfied.
-        </p>
+        <h3>Decrypted Result</h3>
+        <pre
+          style={{
+            background: "#111",
+            color: "#eee",
+            padding: 16,
+            borderRadius: 8,
+            overflowX: "auto",
+            minHeight: 80,
+          }}
+        >
+          {decryptedText || "No decrypted text yet"}
+        </pre>
       </div>
     </div>
   );
