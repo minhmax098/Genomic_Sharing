@@ -1,4 +1,4 @@
-import { Contract, type InterfaceAbi } from "ethers";
+import { Contract, parseEther, type InterfaceAbi } from "ethers";
 import registryArtifact from "../abi/GDMRegistry.json";
 import nftArtifact from "../abi/SGDNFT.json";
 import contractAddresses from "../config/contract-addresses.json";
@@ -74,11 +74,24 @@ export async function hasPurchased(tokenId: number, buyer: string) {
     return registry.hasPurchased(tokenId, buyer);
 }
 
+// export async function purchaseFullAccess(tokenId: number) {
+//     const registry = await getRegistryWriteContract();
+
+//     const publicRecord = await registry.getPublicRecord(tokenId);
+
+//     const price = publicRecord[5];
+
+//     const tx = await registry.purchaseFullAccess(tokenId, {
+//         value: price,
+//     });
+
+//     await tx.wait();
+//     return tx.hash;
+// }
 export async function purchaseFullAccess(tokenId: number) {
     const registry = await getRegistryWriteContract();
 
-    const publicRecord = await registry.getPublicRecord(tokenId);
-    const price = publicRecord.price;
+    const price = parseEther("0.01");
 
     const tx = await registry.purchaseFullAccess(tokenId, {
         value: price,
