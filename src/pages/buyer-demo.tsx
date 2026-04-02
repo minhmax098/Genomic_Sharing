@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { connectWallet, switchToBscTestnet } from "../lib/wallet";
+import { connectWallet, switchToSepolia } from "../lib/wallet";
 import {
   getPublicRecord,
   hasPurchased,
@@ -35,7 +35,7 @@ export default function BuyerDemo() {
 
   const handleConnect = async () => {
     try {
-      await switchToBscTestnet();
+      await switchToSepolia();
       const { address } = await connectWallet();
       setAddress(address);
       setStatus("Buyer wallet connected");

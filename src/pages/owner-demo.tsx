@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from "react";
-import { connectWallet, switchToBscTestnet } from "../lib/wallet";
+import { connectWallet, switchToSepolia } from "../lib/wallet";
 import { getContractAddresses } from "../lib/blockchain";
 import { tacoEncryptPlaintext } from "../lib/tacoEncrypt";
 
@@ -31,7 +31,7 @@ export default function OwnerDemo() {
 
   const handleConnect = async () => {
     try {
-      await switchToBscTestnet();
+      await switchToSepolia();
       const { address } = await connectWallet();
       setAddress(address);
       setStatus("Owner wallet connected");
