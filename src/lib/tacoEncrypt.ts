@@ -42,8 +42,8 @@ function buildBuyerAccessCondition(tokenId: number, registryAddress: string) {
         },
         parameters: [tokenId, ":userAddress"],
         returnValueTest: {
-        comparator: "==",
-        value: "1",
+            comparator: "==",
+            value: 1,
         },
     });
 }
@@ -54,7 +54,7 @@ export async function tacoEncryptPlaintext(params: {
         registryAddress: string;
         tokenId: number;
         ritualId?: number;
-    }): Promise<string> { 
+    }): Promise<{ messageKit: string }> { 
     
     const { plaintext, registryAddress, tokenId } = params;
     const ritualId = Number(params.ritualId ?? import.meta.env.VITE_TACO_RITUAL_ID ?? "0");
@@ -90,5 +90,5 @@ export async function tacoEncryptPlaintext(params: {
 
     const hexString = toHexString(messageKit.toBytes());
     console.log("✅ The owner has encoded it into Hex:", hexString.substring(0, 40) + "...");
-    return hexString;
+    return { messageKit: hexString };
 }
