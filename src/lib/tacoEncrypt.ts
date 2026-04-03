@@ -1,10 +1,8 @@
-// TACo encrypt
 import {
     initialize,
     encrypt,
     domains,
     conditions,
-    ThresholdMessageKit,
 } from "@nucypher/taco";
 import {
     Web3Provider,
@@ -13,8 +11,11 @@ import {
 } from "@ethersproject/providers";
 
 const encoder = new TextEncoder();
-
 let tacoInitialized = false;
+
+// Byte to Hex string
+const toHexString = (bytes: Uint8Array) => 
+    Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 
 async function ensureTacoInitialized() {
     if (!tacoInitialized) {
@@ -24,9 +25,7 @@ async function ensureTacoInitialized() {
 }
 
 function buildBuyerAccessCondition(tokenId: number, registryAddress: string) {
-    // Chain ID of Sepolia for TACo
     const conditionChainId = 11155111;
-
     return new conditions.base.contract.ContractCondition({
         contractAddress: registryAddress,
         chain: conditionChainId,
@@ -49,18 +48,16 @@ function buildBuyerAccessCondition(tokenId: number, registryAddress: string) {
     });
 }
 
+// Encrypted function returns String (Hex) instead Object
 export async function tacoEncryptPlaintext(params: {
         plaintext: string;
         registryAddress: string;
         tokenId: number;
         ritualId?: number;
-    }): Promise<ThresholdMessageKit> {
+    }): Promise<string> { 
+    
     const { plaintext, registryAddress, tokenId } = params;
-
-    // VITE_TACO_RITUAL_ID=6 in .env
-    const ritualId = Number(
-        params.ritualId ?? import.meta.env.VITE_TACO_RITUAL_ID ?? "0"
-    );
+    const ritualId = Number(params.ritualId ?? import.meta.env.VITE_TACO_RITUAL_ID ?? "0");
 
     if (!ritualId) {
         throw new Error("Missing VITE_TACO_RITUAL_ID");
@@ -72,12 +69,7 @@ export async function tacoEncryptPlaintext(params: {
 
     await ensureTacoInitialized();
 
-    // 1. Provider connect wallet (Sepolia)
-    const web3Provider = new Web3Provider(
-        window.ethereum as unknown as ExternalProvider
-    );
-
-    // 2. Provider connects with Polygon Amoy to get data from TACo Coordinator
+    const web3Provider = new Web3Provider(window.ethereum as unknown as ExternalProvider);
     const tacoNodeProvider = new JsonRpcProvider("https://rpc-amoy.polygon.technology/");
 
     type TacoEncryptProvider = Parameters<typeof encrypt>[0];
@@ -85,10 +77,8 @@ export async function tacoEncryptPlaintext(params: {
 
     const accessCondition = buildBuyerAccessCondition(tokenId, registryAddress);
     const plaintextBytes = encoder.encode(plaintext);
-
     const signer = web3Provider.getSigner() as unknown as TacoEncryptSigner;
 
-    // Use tacoNodeProvider instead of web3Provider
     const messageKit = await encrypt(
         tacoNodeProvider as unknown as TacoEncryptProvider,
         domains.TESTNET,
@@ -98,5 +88,7 @@ export async function tacoEncryptPlaintext(params: {
         signer
     );
 
-    return messageKit;
+    const hexString = toHexString(messageKit.toBytes());
+    console.log("✅ The owner has encoded it into Hex:", hexString.substring(0, 40) + "...");
+    return hexString;
 }

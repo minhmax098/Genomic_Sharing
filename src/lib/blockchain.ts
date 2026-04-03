@@ -1,4 +1,4 @@
-import { Contract, parseEther, type InterfaceAbi } from "ethers";
+import { Contract, type InterfaceAbi } from "ethers";
 import registryArtifact from "../abi/GDMRegistry.json";
 import nftArtifact from "../abi/SGDNFT.json";
 import contractAddresses from "../config/contract-addresses.json";
@@ -88,13 +88,32 @@ export async function hasPurchased(tokenId: number, buyer: string) {
 //     await tx.wait();
 //     return tx.hash;
 // }
+
+// export async function purchaseFullAccess(tokenId: number) {
+//     const registry = await getRegistryWriteContract();
+
+//     const price = parseEther("0.1");
+
+//     const tx = await registry.purchaseFullAccess(tokenId, {
+//         value: price,
+//     });
+
+//     await tx.wait();
+//     return tx.hash;
+// }
+
 export async function purchaseFullAccess(tokenId: number) {
     const registry = await getRegistryWriteContract();
 
-    const price = parseEther("0.01");
+    // 1. Đọc thông tin trực tiếp từ Smart Contract
+    const publicRecord = await registry.getPublicRecord(tokenId);
 
+    // 2. Lấy CHÍNH XÁC mức giá mà Contract đang niêm yết (nằm ở vị trí thứ 5)
+    const exactPrice = publicRecord[5];
+
+    // 3. Thanh toán đúng số tiền đó
     const tx = await registry.purchaseFullAccess(tokenId, {
-        value: price,
+        value: exactPrice,
     });
 
     await tx.wait();
