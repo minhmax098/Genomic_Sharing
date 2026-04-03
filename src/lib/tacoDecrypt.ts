@@ -1,19 +1,8 @@
-import {
-    initialize,
-    decrypt,
-    domains,
-    conditions,
-    ThresholdMessageKit,
-} from "@nucypher/taco";
-import {
-    EIP4361AuthProvider,
-    USER_ADDRESS_PARAM_DEFAULT,
-} from "@nucypher/taco-auth";
-import {
-    Web3Provider,
-    JsonRpcProvider,
-    type ExternalProvider,
-} from "@ethersproject/providers";
+// Download the Hex string, verify identity
+// Request key fragments back from TACo, extract data
+import { initialize, decrypt, domains, conditions, ThresholdMessageKit, } from "@nucypher/taco";
+import { EIP4361AuthProvider, USER_ADDRESS_PARAM_DEFAULT, } from "@nucypher/taco-auth";
+import { Web3Provider, JsonRpcProvider, type ExternalProvider, } from "@ethersproject/providers";
 
 let tacoInitialized = false;
 
@@ -88,6 +77,7 @@ export async function tacoDecryptToBytes(params: any) {
     // 2. Provider connects Amoy network (Polygon)
     const tacoNodeProvider = new JsonRpcProvider("https://rpc-amoy.polygon.technology/");
 
+    // Request the Buyer's MetaMask to sign a standard EIP-4361 message.
     type TacoAuthProviderArg0 = ConstructorParameters<typeof EIP4361AuthProvider>[0];
     type TacoAuthProviderArg1 = ConstructorParameters<typeof EIP4361AuthProvider>[1];
     type TacoDecryptProvider = Parameters<typeof decrypt>[0];
@@ -106,6 +96,10 @@ export async function tacoDecryptToBytes(params: any) {
         authProvider
     );
 
+    // It sends the MessageKit and authProvider signature to the TACo network (via the Amoy gateway). 
+    // TACo nodes automatically scan SMC on Sepolia. 
+    // When Buyer has actually paid (satisfying Access Conditions), send back key fragments. 
+    // The browser automatically pieces these key fragments together and decrypts the original DNA sequence.
     const decryptedBytes = await decrypt(
         tacoNodeProvider as unknown as TacoDecryptProvider,
         domains.TESTNET,
