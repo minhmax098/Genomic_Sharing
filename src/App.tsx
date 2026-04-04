@@ -113,7 +113,7 @@ function App() {
             <div className="brand-badge">SG</div>
             <div>
               <div className="brand-title">Secure Genomic Data</div>
-              <div className="brand-subtitle">Blockchain Demo Platform</div>
+              <div className="brand-subtitle">Blockchain Platform</div>
             </div>
           </div>
 
