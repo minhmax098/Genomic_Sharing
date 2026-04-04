@@ -74,44 +74,16 @@ export async function hasPurchased(tokenId: number, buyer: string) {
     return registry.hasPurchased(tokenId, buyer);
 }
 
-// export async function purchaseFullAccess(tokenId: number) {
-//     const registry = await getRegistryWriteContract();
-
-//     const publicRecord = await registry.getPublicRecord(tokenId);
-
-//     const price = publicRecord[5];
-
-//     const tx = await registry.purchaseFullAccess(tokenId, {
-//         value: price,
-//     });
-
-//     await tx.wait();
-//     return tx.hash;
-// }
-
-// export async function purchaseFullAccess(tokenId: number) {
-//     const registry = await getRegistryWriteContract();
-
-//     const price = parseEther("0.1");
-
-//     const tx = await registry.purchaseFullAccess(tokenId, {
-//         value: price,
-//     });
-
-//     await tx.wait();
-//     return tx.hash;
-// }
-
 export async function purchaseFullAccess(tokenId: number) {
     const registry = await getRegistryWriteContract();
 
-    // 1. Đọc thông tin trực tiếp từ Smart Contract
+    // 1. Read info directly from Smart Contract
     const publicRecord = await registry.getPublicRecord(tokenId);
 
-    // 2. Lấy CHÍNH XÁC mức giá mà Contract đang niêm yết (nằm ở vị trí thứ 5)
+    // 2. Get the EXACT price that the Contract is listing (located at position 5)
     const exactPrice = publicRecord[5];
 
-    // 3. Thanh toán đúng số tiền đó
+    // 3. Pay the exact amount
     const tx = await registry.purchaseFullAccess(tokenId, {
         value: exactPrice,
     });
