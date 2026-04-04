@@ -149,7 +149,7 @@ function App() {
               Smart Contracts
             </h1>
             <p className="hero-text">
-              A cleaner web UI inspired by ThingSpeak, redesigned for Admin,
+              Developed for Admin,
               Owner, and Buyer workflows with TACo encryption, NFT-based access,
               and on-chain purchase validation.
             </p>
