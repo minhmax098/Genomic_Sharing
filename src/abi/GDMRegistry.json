@@ -1,4 +1,4 @@
-    [
+[
         {
         "inputs": [
             {
@@ -781,4 +781,4 @@
         "stateMutability": "nonpayable",
         "type": "function"
         }
-    ]
+]
