@@ -2,6 +2,8 @@ import { useState, type ChangeEvent } from "react";
 import { connectWallet, switchToSepolia } from "../lib/wallet";
 import { getContractAddresses } from "../lib/blockchain";
 import { tacoEncryptPlaintext } from "../lib/tacoEncrypt";
+import { uploadEncryptedToIPFS } from "../lib/ipfs";
+import { registerSGD } from "../lib/blockchain";
 
 type ErrorWithMessage = {
     message?: string;
@@ -47,88 +49,132 @@ export default function OwnerDemo() {
                 setStatus("Connect owner wallet first");
                 return;
             }
+            // setStatus("Preparing TACo encryption...");
+            // const kit = await tacoEncryptPlaintext({
+            //     plaintext,
+            //     registryAddress: GDMREGISTRY_ADDRESS,
+            //     tokenId,
+            // });
+            // await fetch("http://localhost:3001/demo/messagekit", {
+            //     method: "POST",
+            //     headers: {
+            //         "Content-Type": "application/json",
+            //     },
+            //     body: JSON.stringify(kit),
+            // });
+            // setMessageKitReady(true);
+            // setStatus("TACo encryption successful and stored on server");
 
-            setStatus("Preparing TACo encryption...");
-
+            // 1. Encrypt (TACo)
+            setStatus("1. Encrypting genomic data with TACo...");
             const kit = await tacoEncryptPlaintext({
                 plaintext,
                 registryAddress: GDMREGISTRY_ADDRESS,
                 tokenId,
             });
 
-            await fetch("http://localhost:3001/demo/messagekit", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(kit),
+            // 2. Upload encrypted data to IPFS (Pinata)
+            setStatus("2. Uploading encrypted data to IPFS...");
+            // Convert kit (Object) to Blob for upload file JSON
+            const kitBlob = new Blob([JSON.stringify(kit)], { type: "application/json" });
+            const fileName = `genomic_data_token_${tokenId}.taco`;
+            
+            const cid = await uploadEncryptedToIPFS(kitBlob, fileName);
+            console.log("IPFS CID:", cid);
+
+            // 3. Register SGD on-chain with CID (Blockchain SMC)
+            setStatus("3. Registering SGD on-chain...");
+            // data insistent with RegisterInput
+            await registerSGD({
+                initialOwner: address,
+                sgdId: `SGD-${tokenId}-${Date.now().toString().slice(-4)}`,
+                rgdId: "RGD-PRIMARY",
+                cid: cid,    // CID from IPFS upload
+                accessCondition: `Owner or Paid buyer`,
+                price: "0.01",   // 0.01 ETH
+                collectionDate: Math.floor(Date.now() / 1000),
+                sampleType: "Genomic Sequence",
+                patientRef: "ANON-001",
+                consentCode: "CONSENT-YES",
+                sampleHash: "0x" + "0".repeat(40),  // Mock hash, should be real hash of the sample
+                encryptionScheme: "TACo-Nucypher",
+                sequencingInfo: "Illumina Hiseq",
+                signatureRef: "0x" + "0".repeat(40),  // Mock signature reference
+                encHash: "0x" + "0".repeat(40),  // Mock hash of the encrypted data, can be generated from the kit
+                tokenURI: `https://gateway.pinata.cloud/ipfs/${cid}`,  // Optional: can point to the IPFS JSON directly
             });
 
             setMessageKitReady(true);
-            setStatus("TACo encryption successful and stored on server");
+            setStatus(`SGD registered on-chain with TACo-encrypted data: ${cid.slice(0, 10)}...`);
+
         } catch (error: unknown) {
             setStatus(getErrorMessage(error, "Failed to prepare TACo encryption"));
         }
     };
 
-    const handleClearServerMessageKit = async () => {
-        try {
-            await fetch("http://localhost:3001/demo/messagekit", {
-                method: "DELETE",
-            });
+    // const handleClearServerMessageKit = async () => {
+    //     try {
+    //         await fetch("http://localhost:3001/demo/messagekit", {
+    //             method: "DELETE",
+    //         });
 
-            setMessageKitReady(false);
-            setStatus("Stored messageKit cleared from server");
-        } catch (error: unknown) {
-            setStatus(getErrorMessage(error, "Failed to clear stored messageKit"));
-        }
+    //         setMessageKitReady(false);
+    //         setStatus("Stored messageKit cleared from server");
+    //     } catch (error: unknown) {
+    //         setStatus(getErrorMessage(error, "Failed to clear stored messageKit"));
+    //     }
+    // };
+    const handleResetUI = () => {
+        setMessageKitReady(false);
+        setStatus("UI state reset. Ready for new TACo encryption.");
+        setSelectedFileName("");
     };
 
     return (
         <div className="demo-page">
-          <div className="demo-header">
-              <div>
-                  <p className="section-tag">Owner workspace</p>
-                  <h2>Prepare encrypted SGD package</h2>
-                  <p className="section-copy">
-                      Connect the owner wallet, choose a token, prepare TACo encryption,
-                      and store the encrypted payload on the demo server.
-                  </p>
-              </div>
+            <div className="demo-header">
+                <div>
+                    <p className="section-tag">Owner workspace</p>
+                    <h2>Prepare encrypted SGD package</h2>
+                    <p className="section-copy">
+                        Connect the owner wallet, choose a token, prepare TACo encryption,
+                        and store the encrypted payload on the demo server.
+                    </p>
+                </div>
 
-              <button className="primary-btn" onClick={handleConnect}>
-                  {address ? "Wallet Connected" : "Connect Wallet"}
-              </button>
-          </div>
+                <button className="primary-btn" onClick={handleConnect}>
+                    {address ? "Wallet Connected" : "Connect Wallet"}
+                </button>
+            </div>
 
-          <div className="info-grid">
-              <div className="info-card">
-                  <span>Owner address</span>
-                  <strong className="mono-text">{address || "Not connected"}</strong>
-              </div>
+            <div className="info-grid">
+                <div className="info-card">
+                    <span>Owner address</span>
+                    <strong className="mono-text">{address || "Not connected"}</strong>
+                </div>
 
-              <div className="info-card">
-                  <span>GDMRegistry</span>
-                  <strong className="mono-text">{GDMREGISTRY_ADDRESS}</strong>
-              </div>
+                <div className="info-card">
+                    <span>GDMRegistry</span>
+                    <strong className="mono-text">{GDMREGISTRY_ADDRESS}</strong>
+                </div>
 
-              <div className="info-card">
-                  <span>SGDNFT</span>
-                  <strong className="mono-text">{SGDNFT_ADDRESS}</strong>
-              </div>
-          </div>
+                <div className="info-card">
+                    <span>SGDNFT</span>
+                    <strong className="mono-text">{SGDNFT_ADDRESS}</strong>
+                </div>
+            </div>
 
-          <div className="demo-grid">
-              <section className="card">
-                  <div className="field-group">
-                      <label className="field-label">Token ID</label>
-                      <input
-                          className="text-input"
-                          type="number"
-                          value={tokenId}
-                          onChange={(e) => setTokenId(Number(e.target.value))}
-                      />
-                  </div>
+            <div className="demo-grid">
+                <section className="card">
+                    <div className="field-group">
+                        <label className="field-label">Token ID</label>
+                        <input
+                            className="text-input"
+                            type="number"
+                            value={tokenId}
+                            onChange={(e) => setTokenId(Number(e.target.value))}
+                        />
+                    </div>
 
                 <div className="field-group">
                     <label className="field-label">Demo Plaintext</label>
@@ -152,7 +198,7 @@ export default function OwnerDemo() {
                     <button className="primary-btn" onClick={handlePrepareTacoEncrypt}>
                         Prepare TACo Encrypt
                     </button>
-                    <button className="secondary-btn" onClick={handleClearServerMessageKit}>
+                    <button className="secondary-btn" onClick={handleResetUI}>
                         Clear Stored MessageKit
                     </button>
                 </div>
@@ -167,25 +213,25 @@ export default function OwnerDemo() {
                         {messageKitReady ? "MessageKit Ready" : "MessageKit Not Ready"}
                     </div>
                 </div>
-              </section>
+                </section>
 
-              <aside className="card">
-                  <h3>Planned TACo flow</h3>
-                  <ol className="flow-list">
-                      <li>Owner encrypts SGD using TACo policy</li>
-                      <li>Encrypted SGD is stored temporarily on the demo server</li>
-                      <li>Buyer purchases full access on-chain</li>
-                      <li>Buyer loads encrypted payload from the backend</li>
-                      <li>Buyer decrypts only after satisfying access condition</li>
-                  </ol>
+                <aside className="card">
+                    <h3>Planned TACo flow</h3>
+                    <ol className="flow-list">
+                        <li>Owner encrypts SGD using TACo policy</li>
+                        <li>Encrypted SGD is stored temporarily on the demo server</li>
+                        <li>Buyer purchases full access on-chain</li>
+                        <li>Buyer loads encrypted payload from the backend</li>
+                        <li>Buyer decrypts only after satisfying access condition</li>
+                    </ol>
 
-                  <div className="mini-note">
-                      This layout is presentation-friendly: your professor can clearly
-                      see connection status, contract addresses, user inputs, and action
-                      flow without the page looking crowded.
-                  </div>
-              </aside>
-          </div>
+                    <div className="mini-note">
+                        This layout is presentation-friendly: your professor can clearly
+                        see connection status, contract addresses, user inputs, and action
+                        flow without the page looking crowded.
+                    </div>
+                </aside>
+            </div>
         </div>
     );
 }

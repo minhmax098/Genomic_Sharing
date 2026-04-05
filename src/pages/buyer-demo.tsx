@@ -85,7 +85,7 @@ export default function BuyerDemo() {
         } catch (error: unknown) {
             setStatus(getErrorMessage(error, "Purchase failed"));
         }
-      };
+    };
 
     const handleLoadMessageKit = async () => {
         try {
@@ -94,7 +94,7 @@ export default function BuyerDemo() {
             const response = await fetch("http://localhost:3001/demo/messagekit");
 
             if (!response.ok) {
-              throw new Error("No messageKit available on server");
+                throw new Error("No messageKit available on server");
             }
 
             const kit = await response.json();
@@ -143,104 +143,104 @@ export default function BuyerDemo() {
 
     return (
         <div className="demo-page">
-          <div className="demo-header">
-              <div>
-                  <p className="section-tag">Buyer workspace</p>
-                  <h2>Purchase access and decrypt the protected data</h2>
-                  <p className="section-copy">
-                      Review public record, confirm purchase state, buy full access, load
-                      the encrypted payload, and perform TACo decryption.
-                  </p>
-              </div>
-
-            <button className="primary-btn" onClick={handleConnect}>
-                {address ? "Wallet Connected" : "Connect Wallet"}
-            </button>
-          </div>
-
-          <div className="info-grid">
-              <div className="info-card">
-                  <span>Buyer address</span>
-                  <strong className="mono-text">{address || "Not connected"}</strong>
-              </div>
-
-              <div className="info-card">
-                  <span>Purchased</span>
-                  <strong>{purchased || "-"}</strong>
-              </div>
-
-              <div className="info-card">
-                  <span>MessageKit</span>
-                  <strong>{messageKitAvailable ? "Available" : "Not available"}</strong>
-              </div>
-          </div>
-
-          <div className="demo-grid">
-              <section className="card">
-                <div className="field-group">
-                    <label className="field-label">Token ID</label>
-                    <input
-                        className="text-input"
-                        type="number"
-                        value={tokenId}
-                        onChange={(e) => setTokenId(Number(e.target.value))}
-                    />
+            <div className="demo-header">
+                <div>
+                    <p className="section-tag">Buyer workspace</p>
+                    <h2>Purchase access and decrypt the protected data</h2>
+                    <p className="section-copy">
+                        Review public record, confirm purchase state, buy full access, load
+                        the encrypted payload, and perform TACo decryption.
+                    </p>
                 </div>
 
-                <div className="action-row">
-                    <button className="secondary-btn" onClick={handleGetRecord}>
-                        Get Public Record
-                    </button>
-                    <button className="secondary-btn" onClick={handleCheckPurchased}>
-                        Check Purchased
-                    </button>
-                    <button
-                        className="primary-btn"
-                        onClick={handlePurchase}
-                        disabled={purchased === "true"}
-                    >
-                        Purchase Full Access
-                    </button>
-                    <button className="secondary-btn" onClick={handleLoadMessageKit}>
-                        Load Encrypted Data
-                    </button>
-                    <button className="secondary-btn" onClick={handleTacoDecrypt}>
-                        TACo Decrypt
-                    </button>
+                <button className="primary-btn" onClick={handleConnect}>
+                    {address ? "Wallet Connected" : "Connect Wallet"}
+                </button>
+            </div>
+
+            <div className="info-grid">
+                <div className="info-card">
+                    <span>Buyer address</span>
+                    <strong className="mono-text">{address || "Not connected"}</strong>
                 </div>
 
-                <div className="status-stack">
-                    <div className="status-box">
-                        <span>Current status</span>
-                        <strong>{status || "Waiting for action"}</strong>
-                    </div>
-
-                    <div className={`pill ${messageKitAvailable ? "success" : "muted"}`}>
-                        {messageKitAvailable ? "Encrypted Payload Ready" : "No Payload Yet"}
-                    </div>
+                <div className="info-card">
+                    <span>Purchased</span>
+                    <strong>{purchased || "-"}</strong>
                 </div>
 
-                <div className="status-stack">
-                    <div className="status-box">
-                        <span>Transaction hash</span>
-                        <strong className="mono-text">{txHash || "-"}</strong>
-                    </div>
+                <div className="info-card">
+                    <span>MessageKit</span>
+                    <strong>{messageKitAvailable ? "Available" : "Not available"}</strong>
                 </div>
+            </div>
 
-                {record !== null && (
-                    <div className="result-stack" style={{ marginTop: 18 }}>
-                        <h3>Public Record</h3>
-                        <pre className="mono-box">
-                          {JSON.stringify(
-                            record,
-                            (_, value) =>
-                              typeof value === "bigint" ? value.toString() : value,
-                            2
-                          )}
-                        </pre>
+            <div className="demo-grid">
+                <section className="card">
+                    <div className="field-group">
+                        <label className="field-label">Token ID</label>
+                        <input
+                            className="text-input"
+                            type="number"
+                            value={tokenId}
+                            onChange={(e) => setTokenId(Number(e.target.value))}
+                        />
                     </div>
-                )}
-              </section>
+
+                    <div className="action-row">
+                        <button className="secondary-btn" onClick={handleGetRecord}>
+                            Get Public Record
+                        </button>
+                        <button className="secondary-btn" onClick={handleCheckPurchased}>
+                            Check Purchased
+                        </button>
+                        <button
+                            className="primary-btn"
+                            onClick={handlePurchase}
+                            disabled={purchased === "true"}
+                        >
+                            Purchase Full Access
+                        </button>
+                        <button className="secondary-btn" onClick={handleLoadMessageKit}>
+                            Load Encrypted Data
+                        </button>
+                        <button className="secondary-btn" onClick={handleTacoDecrypt}>
+                            TACo Decrypt
+                        </button>
+                    </div>
+
+                    <div className="status-stack">
+                        <div className="status-box">
+                            <span>Current status</span>
+                            <strong>{status || "Waiting for action"}</strong>
+                        </div>
+
+                        <div className={`pill ${messageKitAvailable ? "success" : "muted"}`}>
+                            {messageKitAvailable ? "Encrypted Payload Ready" : "No Payload Yet"}
+                        </div>
+                    </div>
+
+                    <div className="status-stack">
+                        <div className="status-box">
+                            <span>Transaction hash</span>
+                            <strong className="mono-text">{txHash || "-"}</strong>
+                        </div>
+                    </div>
+
+                    {record !== null && (
+                        <div className="result-stack" style={{ marginTop: 18 }}>
+                            <h3>Public Record</h3>
+                            <pre className="mono-box">
+                            {JSON.stringify(
+                                record,
+                                (_, value) =>
+                                typeof value === "bigint" ? value.toString() : value,
+                                2
+                            )}
+                            </pre>
+                        </div>
+                    )}
+                </section>
 
             <aside className="card">
                 <h3>Decrypted Result</h3>
@@ -253,7 +253,7 @@ export default function BuyerDemo() {
                     separated clearly from transaction flow and purchase steps.
                 </div>
             </aside>
-          </div>
+            </div>
         </div>
     );
 }

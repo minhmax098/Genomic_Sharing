@@ -1,3 +1,7 @@
+// Owner: call registerSGD(): save IPFS CID on-chain
+// Buyer: call getPublicRecord(): watch price and see general info 
+// Buyer: call purchaseFullAccess(): pay to buy access
+// Buyer: call getCID(): get CID after purchase, then fetch from IPFS and decrypt
 import { Contract, type InterfaceAbi } from "ethers";
 import registryArtifact from "../abi/GDMRegistry.json";
 import nftArtifact from "../abi/SGDNFT.json";
@@ -113,4 +117,52 @@ export function getContractAddresses() {
         GDMREGISTRY_ADDRESS,
         SGDNFT_ADDRESS,
     };
+}
+
+// register new genomic data records on the Blockchain 
+export async function registerSGD(input: {
+    initialOwner: string;
+    sgdId: string;
+    rgdId: string;
+    cid: string;    // CID is passed here from IPFS 
+    accessCondition: string;
+    price: string;  // ETH -> Wei
+    collectionDate: number;
+    sampleType: string;
+    patientRef: string;
+    consentCode: string;
+    sampleHash: string;
+    encryptionScheme: string;
+    sequencingInfo: string;
+    signatureRef: string;
+    encHash: string;
+    tokenURI: string;
+}) {
+    const registry = await getRegistryWriteContract();
+    const { parseEther } = await import("ethers");
+
+    // convert price from ETH to Wei
+    const priceInWei = parseEther(input.price);
+
+    // call function on the SMC
+    const tx = await registry.registerSGD({
+        ...input, 
+        price: priceInWei,
+    });
+
+    await tx.wait();
+    return tx.hash;
+}
+
+// Get CID from the Blockchain (owner or bought can access)
+export async function getCID(tokenId: number) {
+    const registry = await getRegistryWriteContract();
+    try {
+        const cid = await registry.getCID(tokenId);
+        return cid;
+    }
+    catch (error) {
+        console.error("Error fetching CID from blockchain (not purchased or not entitled):", error);
+        throw error;
+    }
 }
