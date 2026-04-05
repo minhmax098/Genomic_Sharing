@@ -114,3 +114,38 @@ export function getContractAddresses() {
         SGDNFT_ADDRESS,
     };
 }
+
+// register new genomic data records on the Blockchain 
+export async function registerSGD(input: {
+    initialOwner: string;
+    sgdId: string;
+    rgdId: string;
+    cid: string;    // CID is passed here from IPFS 
+    accessCondition: string;
+    price: string;  // ETH -> Wei
+    collectionData: number;
+    sampleType: string;
+    patientRef: string;
+    consentCode: string;
+    sampleHash: string;
+    encryptionScheme: string;
+    sequencingInfo: string;
+    signatureRef: string;
+    encHash: string;
+    tokenURI: string;
+}) {
+    const registry = await getRegistryWriteContract();
+    const { parseEther } = await import("ethers");
+
+    // convert price from ETH to Wei
+    const priceInWei = parseEther(input.price);
+
+    // call function on the SMC
+    const tx = await registry.registerSGD({
+        ...input, 
+        price: priceInWei,
+    });
+
+    await tx.wait();
+    return tx.hash;
+}
