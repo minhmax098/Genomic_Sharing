@@ -1,3 +1,7 @@
+// Owner: call registerSGD(): save IPFS CID on-chain
+// Buyer: call getPublicRecord(): watch price and see general info 
+// Buyer: call purchaseFullAccess(): pay to buy access
+// Buyer: call getCID(): get CID after purchase, then fetch from IPFS and decrypt
 import { Contract, type InterfaceAbi } from "ethers";
 import registryArtifact from "../abi/GDMRegistry.json";
 import nftArtifact from "../abi/SGDNFT.json";
@@ -123,7 +127,7 @@ export async function registerSGD(input: {
     cid: string;    // CID is passed here from IPFS 
     accessCondition: string;
     price: string;  // ETH -> Wei
-    collectionData: number;
+    collectionDate: number;
     sampleType: string;
     patientRef: string;
     consentCode: string;
@@ -148,4 +152,17 @@ export async function registerSGD(input: {
 
     await tx.wait();
     return tx.hash;
+}
+
+// Get CID from the Blockchain (owner or bought can access)
+export async function getCID(tokenId: number) {
+    const registry = await getRegistryWriteContract();
+    try {
+        const cid = await registry.getCID(tokenId);
+        return cid;
+    }
+    catch (error) {
+        console.error("Error fetching CID from blockchain (not purchased or not entitled):", error);
+        throw error;
+    }
 }
