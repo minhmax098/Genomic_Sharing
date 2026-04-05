@@ -2,6 +2,8 @@ import { useState, type ChangeEvent } from "react";
 import { connectWallet, switchToSepolia } from "../lib/wallet";
 import { getContractAddresses } from "../lib/blockchain";
 import { tacoEncryptPlaintext } from "../lib/tacoEncrypt";
+import { uploadEncryptedToIPFS } from "../lib/ipfs";
+import { registerSGD } from "../lib/sgdRegistry";
 
 type ErrorWithMessage = {
     message?: string;
