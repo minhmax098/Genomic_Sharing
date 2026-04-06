@@ -1,3 +1,4 @@
+// owner page
 import { useState, type ChangeEvent } from "react";
 import { connectWallet, switchToSepolia } from "../lib/wallet";
 import { getContractAddresses } from "../lib/blockchain";
