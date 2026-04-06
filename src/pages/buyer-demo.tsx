@@ -26,6 +26,7 @@ export default function BuyerDemo() {
     const [status, setStatus] = useState("");
     const [messageKitAvailable, setMessageKitAvailable] = useState(false);
     const [decryptedText, setDecryptedText] = useState("");
+    const [currentKit, setCurrentKit] = useState<{messageKit: unknown} | null>(null);
 
     const handleConnect = async () => {
         try {
@@ -91,14 +92,6 @@ export default function BuyerDemo() {
 
     const handleLoadMessageKit = async () => {
         try {
-            // setStatus("Loading encrypted payload from server...");
-            // const response = await fetch("http://localhost:3001/demo/messagekit");
-            // if (!response.ok) {
-            //     throw new Error("No messageKit available on server");
-            // }
-            // const kit = await response.json();
-            // setMessageKitAvailable(Boolean(kit));
-            // setStatus("Encrypted payload loaded from server");
             setStatus("Fetching CID from blockchain...");
             // 1. Get CID from Contract (Buyer bought successfully)
             const cid = await getCID(tokenId);
@@ -112,6 +105,7 @@ export default function BuyerDemo() {
             const kit = JSON.parse(kitText);
 
             // Save into state to use Decrypt 
+            setCurrentKit(kit);
             setMessageKitAvailable(true);
             setStatus("Encrypted payload loaded successfully from IPFS");
 
@@ -134,25 +128,22 @@ export default function BuyerDemo() {
                 return;
             }
 
-            setStatus("Loading encrypted payload from server...");
-
-            const response = await fetch("http://localhost:3001/demo/messagekit");
-            if (!response.ok) {
-                throw new Error("No messageKit available on server");
+            // Check if currentKit is loaded from IPFS
+            if (!currentKit) {
+                setStatus("Please load encrypted data from IPFS first");
+                return;
             }
 
-            const kit = await response.json();
-
-            setMessageKitAvailable(Boolean(kit));
             setStatus("Decrypting with TACo...");
 
             const text = await tacoDecryptToString({
-                messageKit: kit as never,
+                messageKit: (currentKit as {messageKit: string}).messageKit, 
             });
 
             setDecryptedText(text);
             setStatus("TACo decrypt successful");
         } catch (error: unknown) {
+            console.error("TACo decryption error:", error);
             setStatus(getErrorMessage(error, "TACo decrypt failed"));
         }
     };
