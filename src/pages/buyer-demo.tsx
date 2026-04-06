@@ -1,7 +1,9 @@
+// buyer page
 import { useState } from "react";
 import { connectWallet, switchToSepolia } from "../lib/wallet";
-import { getPublicRecord, hasPurchased, purchaseFullAccess, } from "../lib/blockchain";
+import { getPublicRecord, hasPurchased, purchaseFullAccess, getCID } from "../lib/blockchain";
 import { tacoDecryptToString } from "../lib/tacoDecrypt";
+import { fetchFromIPFS } from "../lib/ipfs";
 
 type ErrorWithMessage = {
     message?: string;
@@ -11,7 +13,6 @@ function getErrorMessage(error: unknown, fallback: string) {
     if (typeof error === "object" && error !== null && "message" in error) {
         return (error as ErrorWithMessage).message || fallback;
     }
-
     return fallback;
 }
 
@@ -24,6 +25,8 @@ export default function BuyerDemo() {
     const [status, setStatus] = useState("");
     const [messageKitAvailable, setMessageKitAvailable] = useState(false);
     const [decryptedText, setDecryptedText] = useState("");
+    // currentKit
+    const [currentKit, setCurrentKit] = useState<string | { messageKit: string } | null>(null);
 
     const handleConnect = async () => {
         try {
@@ -53,7 +56,6 @@ export default function BuyerDemo() {
                 setStatus("Connect buyer wallet first");
                 return;
             }
-
             setStatus("Checking purchase status...");
             const result = await hasPurchased(tokenId, address);
             setPurchased(String(result));
@@ -69,12 +71,10 @@ export default function BuyerDemo() {
                 setStatus("Connect buyer wallet first");
                 return;
             }
-
             if (purchased === "true") {
                 setStatus("Buyer already purchased access");
                 return;
             }
-
             setStatus("Sending purchase transaction...");
             const hash = await purchaseFullAccess(tokenId);
             setTxHash(hash);
@@ -89,20 +89,34 @@ export default function BuyerDemo() {
 
     const handleLoadMessageKit = async () => {
         try {
-            setStatus("Loading encrypted payload from server...");
+            setStatus("Fetching CID from blockchain...");
+            
+            // 1. Get the correct CID from Smart Contract through the getCID function
+            const cid = await getCID(tokenId);
+            console.log("Mã CID lấy được từ chuỗi:", cid);
 
-            const response = await fetch("http://localhost:3001/demo/messagekit");
-
-            if (!response.ok) {
-                throw new Error("No messageKit available on server");
+            if (!cid || !cid.startsWith("Qm")) {
+                setStatus("Lỗi: Không tìm thấy mã CID hợp lệ (phải bắt đầu bằng Qm)");
+                return;
             }
 
-            const kit = await response.json();
-            setMessageKitAvailable(Boolean(kit));
-            setStatus("Encrypted payload loaded from server");
+            setStatus("Fetching encrypted payload from IPFS...");
+            
+            // 2. Download Blob data from IPFS Gateway
+            const kitData = await fetchFromIPFS(cid);
+
+            // 3. Convert Blob into text string and parse as JSON Object
+            const kitText = await new Response(kitData).text();
+            const kit = JSON.parse(kitText);
+
+            setCurrentKit(kit);
+            setMessageKitAvailable(true);
+            setStatus("Encrypted payload loaded successfully from IPFS");
+
         } catch (error: unknown) {
+            console.error("Load IPFS Error:", error);
             setMessageKitAvailable(false);
-            setStatus(getErrorMessage(error, "Failed to load messageKit"));
+            setStatus(getErrorMessage(error, "Failed to load from IPFS"));
         }
     };
 
@@ -118,26 +132,32 @@ export default function BuyerDemo() {
                 return;
             }
 
-            setStatus("Loading encrypted payload from server...");
-
-            const response = await fetch("http://localhost:3001/demo/messagekit");
-            if (!response.ok) {
-                throw new Error("No messageKit available on server");
+            if (!currentKit) {
+                setStatus("Please load encrypted data from IPFS first");
+                return;
             }
 
-            const kit = await response.json();
-
-            setMessageKitAvailable(Boolean(kit));
             setStatus("Decrypting with TACo...");
 
+            // Data extraction: if kit is an object {messageKit: "..."} then get messageKit field, 
+            // if kit is encoded string then use the kit directly.
+            let kitToDecrypt: string;
+
+            if (typeof currentKit === 'object' && currentKit !== null && 'messageKit' in currentKit) {
+                kitToDecrypt = (currentKit as { messageKit: string }).messageKit;
+            } else {
+                kitToDecrypt = currentKit as string;
+            }
+
             const text = await tacoDecryptToString({
-                messageKit: kit as never,
+                messageKit: kitToDecrypt, 
             });
 
             setDecryptedText(text);
             setStatus("TACo decrypt successful");
         } catch (error: unknown) {
-            setStatus(getErrorMessage(error, "TACo decrypt failed"));
+            console.error("TACo decryption error:", error);
+            setStatus(getErrorMessage(error, "TACo decrypt failed (Check console for details)"));
         }
     };
 
@@ -242,17 +262,17 @@ export default function BuyerDemo() {
                     )}
                 </section>
 
-            <aside className="card">
-                <h3>Decrypted Result</h3>
-                <pre className="mono-box">
-                    {decryptedText || "No decrypted text yet"}
-                </pre>
+                <aside className="card">
+                    <h3>Decrypted Result</h3>
+                    <pre className="mono-box">
+                        {decryptedText || "No decrypted text yet"}
+                    </pre>
 
-                <div className="mini-note">
-                    For presentation, this panel is good because the final result is
-                    separated clearly from transaction flow and purchase steps.
-                </div>
-            </aside>
+                    <div className="mini-note">
+                        For presentation, this panel is good because the final result is
+                        separated clearly from transaction flow and purchase steps.
+                    </div>
+                </aside>
             </div>
         </div>
     );

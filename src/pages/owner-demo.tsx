@@ -1,3 +1,4 @@
+// owner page
 import { useState, type ChangeEvent } from "react";
 import { connectWallet, switchToSepolia } from "../lib/wallet";
 import { getContractAddresses } from "../lib/blockchain";
@@ -49,21 +50,6 @@ export default function OwnerDemo() {
                 setStatus("Connect owner wallet first");
                 return;
             }
-            // setStatus("Preparing TACo encryption...");
-            // const kit = await tacoEncryptPlaintext({
-            //     plaintext,
-            //     registryAddress: GDMREGISTRY_ADDRESS,
-            //     tokenId,
-            // });
-            // await fetch("http://localhost:3001/demo/messagekit", {
-            //     method: "POST",
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //     },
-            //     body: JSON.stringify(kit),
-            // });
-            // setMessageKitReady(true);
-            // setStatus("TACo encryption successful and stored on server");
 
             // 1. Encrypt (TACo)
             setStatus("1. Encrypting genomic data with TACo...");
@@ -112,18 +98,6 @@ export default function OwnerDemo() {
         }
     };
 
-    // const handleClearServerMessageKit = async () => {
-    //     try {
-    //         await fetch("http://localhost:3001/demo/messagekit", {
-    //             method: "DELETE",
-    //         });
-
-    //         setMessageKitReady(false);
-    //         setStatus("Stored messageKit cleared from server");
-    //     } catch (error: unknown) {
-    //         setStatus(getErrorMessage(error, "Failed to clear stored messageKit"));
-    //     }
-    // };
     const handleResetUI = () => {
         setMessageKitReady(false);
         setStatus("UI state reset. Ready for new TACo encryption.");
@@ -216,19 +190,18 @@ export default function OwnerDemo() {
                 </section>
 
                 <aside className="card">
-                    <h3>Planned TACo flow</h3>
+                    <h3>Planned TACo Decentralized Flow</h3>
                     <ol className="flow-list">
                         <li>Owner encrypts SGD using TACo policy</li>
-                        <li>Encrypted SGD is stored temporarily on the demo server</li>
-                        <li>Buyer purchases full access on-chain</li>
-                        <li>Buyer loads encrypted payload from the backend</li>
-                        <li>Buyer decrypts only after satisfying access condition</li>
+                        <li>Encrypted SGD is pinned to <strong>IPFS (Pinata)</strong></li>
+                        <li>Owner registers <strong>CID</strong> and metadata on Ethereum (Sepolia)</li>
+                        <li>Buyer purchases full access and retrieves CID from the SMC</li>
+                        <li>Buyer fetches payload from IPFS and decrypts via TACo</li>
                     </ol>
 
                     <div className="mini-note">
-                        This layout is presentation-friendly: your professor can clearly
-                        see connection status, contract addresses, user inputs, and action
-                        flow without the page looking crowded.
+                        This workflow is now fully decentralized. Data is stored on IPFS, 
+                        and access control is managed by the GDMRegistry Smart Contract.
                     </div>
                 </aside>
             </div>
