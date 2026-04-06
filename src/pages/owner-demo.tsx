@@ -49,21 +49,6 @@ export default function OwnerDemo() {
                 setStatus("Connect owner wallet first");
                 return;
             }
-            // setStatus("Preparing TACo encryption...");
-            // const kit = await tacoEncryptPlaintext({
-            //     plaintext,
-            //     registryAddress: GDMREGISTRY_ADDRESS,
-            //     tokenId,
-            // });
-            // await fetch("http://localhost:3001/demo/messagekit", {
-            //     method: "POST",
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //     },
-            //     body: JSON.stringify(kit),
-            // });
-            // setMessageKitReady(true);
-            // setStatus("TACo encryption successful and stored on server");
 
             // 1. Encrypt (TACo)
             setStatus("1. Encrypting genomic data with TACo...");
@@ -112,18 +97,6 @@ export default function OwnerDemo() {
         }
     };
 
-    // const handleClearServerMessageKit = async () => {
-    //     try {
-    //         await fetch("http://localhost:3001/demo/messagekit", {
-    //             method: "DELETE",
-    //         });
-
-    //         setMessageKitReady(false);
-    //         setStatus("Stored messageKit cleared from server");
-    //     } catch (error: unknown) {
-    //         setStatus(getErrorMessage(error, "Failed to clear stored messageKit"));
-    //     }
-    // };
     const handleResetUI = () => {
         setMessageKitReady(false);
         setStatus("UI state reset. Ready for new TACo encryption.");
