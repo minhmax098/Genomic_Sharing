@@ -2,6 +2,8 @@ import { useState } from "react";
 import { connectWallet, switchToSepolia } from "../lib/wallet";
 import { getPublicRecord, hasPurchased, purchaseFullAccess, } from "../lib/blockchain";
 import { tacoDecryptToString } from "../lib/tacoDecrypt";
+import { fetchFromIPFS } from "../lib/ipfs";
+import { getCID } from "../lib/blockchain";
 
 type ErrorWithMessage = {
     message?: string;
@@ -89,17 +91,31 @@ export default function BuyerDemo() {
 
     const handleLoadMessageKit = async () => {
         try {
-            setStatus("Loading encrypted payload from server...");
+            // setStatus("Loading encrypted payload from server...");
+            // const response = await fetch("http://localhost:3001/demo/messagekit");
+            // if (!response.ok) {
+            //     throw new Error("No messageKit available on server");
+            // }
+            // const kit = await response.json();
+            // setMessageKitAvailable(Boolean(kit));
+            // setStatus("Encrypted payload loaded from server");
+            setStatus("Fetching CID from blockchain...");
+            // 1. Get CID from Contract (Buyer bought successfully)
+            const cid = await getCID(tokenId);
+            setStatus("Fetching encrypted payload from IPFS...");
 
-            const response = await fetch("http://localhost:3001/demo/messagekit");
+            //2. Fetch data from IPFS
+            const kitData = await fetchFromIPFS(cid);
 
-            if (!response.ok) {
-                throw new Error("No messageKit available on server");
-            }
+            // convert binary data to Object MessageKit
+            const kitText = await new Response(kitData).text();
+            const kit = JSON.parse(kitText);
 
-            const kit = await response.json();
-            setMessageKitAvailable(Boolean(kit));
-            setStatus("Encrypted payload loaded from server");
+            // Save into state to use Decrypt 
+            setMessageKitAvailable(true);
+            setStatus("Encrypted payload loaded successfully from IPFS");
+
+            return kit; // return to Decrypt function use
         } catch (error: unknown) {
             setMessageKitAvailable(false);
             setStatus(getErrorMessage(error, "Failed to load messageKit"));
