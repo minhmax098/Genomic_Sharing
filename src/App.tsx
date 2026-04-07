@@ -29,7 +29,7 @@ function AdminOverview() {
           <p className="section-tag">Admin dashboard</p>
           <h2>System overview for genomic data sharing</h2>
           <p className="section-copy">
-            Manage the demo environment, review contract endpoints, and monitor
+            Manage environment, review contract endpoints, and monitor
             the overall Owner → Buyer access flow.
           </p>
         </div>
@@ -58,8 +58,8 @@ function AdminOverview() {
             <div className="feature-card">
               <h4>Admin</h4>
               <p>
-                Deploy contracts, configure addresses, and keep the demo network
-                and backend ready.
+                Deploy contracts, configure addresses, and monitor the demo network 
+                and IPFS connectivity.
               </p>
             </div>
 
@@ -67,7 +67,7 @@ function AdminOverview() {
               <h4>Owner</h4>
               <p>
                 Connect wallet, prepare TACo encryption, and upload encrypted
-                payload for a specific token.
+                payload to IPFS for a specific token.
               </p>
             </div>
 
@@ -86,13 +86,13 @@ function AdminOverview() {
           <ol className="flow-list">
             <li>Deploy and verify GDMRegistry + SGDNFT contracts</li>
             <li>Set contract addresses in the frontend environment</li>
-            <li>Run backend server for temporary messageKit storage</li>
-            <li>Test Owner encryption flow with a demo token ID</li>
+            <li>Configure IPFS Gateway and Pinata API</li>
+            <li>Test Owner encryption & IPFS upload flow</li>
             <li>Validate Buyer purchase and TACo decryption flow</li>
           </ol>
 
           <div className="mini-note">
-            This Admin tab is currently an overview panel. Later you can add:
+            This Admin tab is currently an overview panel. Later add:
             minting, registry updates, access logs, token metadata management,
             and demo reset actions.
           </div>
@@ -188,24 +188,23 @@ function App() {
           <div className="feature-card">
             <h4>Role-based navigation</h4>
             <p>
-              Separate Admin, Owner, and Buyer tabs so the demo is easier to
-              present to your professor.
+              Admin, Owner, and Buyer.
             </p>
           </div>
 
           <div className="feature-card">
-            <h4>Cleaner dashboard layout</h4>
+            <h4>Decentralized dashboard</h4>
             <p>
-              Cards, spacing, status pills, and grouped actions make the flow
-              much easier to read.
+              Cards, spacing, status pills, and grouped actions 
+              are optimized for Web3 workflow interaction.
             </p>
           </div>
 
           <div className="feature-card">
-            <h4>Same backend logic</h4>
+            <h4>Blockchain & IPFS Integration</h4>
             <p>
-              Contract calls, wallet connect, purchase, server fetch, and TACo
-              encryption/decryption remain unchanged.
+              Contract calls, decentralized storage (IPFS), 
+              and TACo threshold encryption/decryption now replace the legacy backend.
             </p>
           </div>
         </div>

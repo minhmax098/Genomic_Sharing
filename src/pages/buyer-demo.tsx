@@ -269,8 +269,7 @@ export default function BuyerDemo() {
                     </pre>
 
                     <div className="mini-note">
-                        For presentation, this panel is good because the final result is
-                        separated clearly from transaction flow and purchase steps.
+                        The final result is separated clearly from transaction flow and purchase steps.
                     </div>
                 </aside>
             </div>

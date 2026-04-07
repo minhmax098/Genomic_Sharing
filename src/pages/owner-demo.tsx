@@ -111,8 +111,9 @@ export default function OwnerDemo() {
                     <p className="section-tag">Owner workspace</p>
                     <h2>Prepare encrypted SGD package</h2>
                     <p className="section-copy">
-                        Connect the owner wallet, choose a token, prepare TACo encryption,
-                        and store the encrypted payload on the demo server.
+                        Connect the Data Owner's wallet, select a target Token ID, and initiate TACo Threshold Encryption. 
+                        The resulting encrypted genomic payload is then securely uploaded to IPFS via Pinata, 
+                        ensuring decentralized and immutable data availability.
                     </p>
                 </div>
 
