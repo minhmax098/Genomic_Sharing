@@ -18,7 +18,7 @@ export default function SecurityCenter() {
     const handleConnect = async () => {
         const { address } = await connectWallet();
         setAddress(address);
-        setStatus("Security Center Node Connected");
+        setStatus("Sequenced Center Node Connected");
     };
 
     const handleSecureProcessing = async () => {
@@ -75,15 +75,15 @@ export default function SecurityCenter() {
         <div className="demo-page">
             <div className="demo-header">
                 <div>
-                    <p className="section-tag">Security Center</p>
+                    <p className="section-tag">Sequenced Center</p>
                     <h2>2. Secure Processing & Encryption</h2>
                     <p className="section-copy">
-                        The Security Center acts as a Trusted Execution Environment. 
+                        The Sequenced Center acts as a Trusted Execution Environment. 
                         We perform heavy computation, encryption, and decentralized storage tasks.
                     </p>
                 </div>
                 <button className="primary-btn" onClick={handleConnect} style={{background: '#6366f1'}}>
-                    {address ? "Node Active" : "Connect Security Node"}
+                    {address ? "Node Active" : "Connect Sequenced Center Node"}
                 </button>
             </div>
 
