@@ -1,23 +1,11 @@
-// import OwnerDemo from "./pages/owner-demo";
-// import BuyerDemo from "./pages/buyer-demo";
-
-// function App() {
-//   return (
-//     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-//       <OwnerDemo />
-//       <BuyerDemo />
-//     </div>
-//   );
-// }
-
-// export default App;
 import { useState } from "react";
 import OwnerDemo from "./pages/owner-demo";
 import BuyerDemo from "./pages/buyer-demo";
+import SecurityCenter from "./pages/security-center";
 import { getContractAddresses } from "./lib/blockchain";
 import "./styles/app.css";
 
-type TabKey = "admin" | "owner" | "buyer";
+type TabKey = "admin" | "owner" | "sequenced" | "buyer";
 
 function AdminOverview() {
   const { GDMREGISTRY_ADDRESS, SGDNFT_ADDRESS } = getContractAddresses();
@@ -65,6 +53,14 @@ function AdminOverview() {
 
             <div className="feature-card">
               <h4>Owner</h4>
+              <p>
+                Connect wallet, prepare TACo encryption, and upload encrypted
+                payload to IPFS for a specific token.
+              </p>
+            </div>
+
+            <div className="feature-card">
+              <h4>Sequenced Center</h4>
               <p>
                 Connect wallet, prepare TACo encryption, and upload encrypted
                 payload to IPFS for a specific token.
@@ -129,6 +125,12 @@ function App() {
               onClick={() => setActiveTab("owner")}
             >
               Owner
+            </button>
+            <button
+              className={`nav-tab ${activeTab === "sequenced" ? "active" : ""}`}
+              onClick={() => setActiveTab("sequenced")}
+            >
+              Sequenced Center
             </button>
             <button
               className={`nav-tab ${activeTab === "buyer" ? "active" : ""}`}
@@ -212,6 +214,7 @@ function App() {
         <section className="panel-surface">
           {activeTab === "admin" && <AdminOverview />}
           {activeTab === "owner" && <OwnerDemo />}
+          {activeTab === "sequenced" && <SecurityCenter />}
           {activeTab === "buyer" && <BuyerDemo />}
         </section>
       </main>
