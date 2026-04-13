@@ -28,13 +28,19 @@ const handleSecureProcessing = async () => {
         setIsFinished(false);
         setStatus("Re-verifying data integrity and checking duplicates...");
 
-        const mockPlaintext = "Hello SGD from Owner A"; // get from authorize state
+        const dataToProcess = localStorage.getItem("authorized_genomic_data") || "";
+
+        if (!dataToProcess) {
+            setStatus("Error: No authorized data found from Owner.");
+            setIsProcessing(false);
+            return;
+        }
 
         // B11: Check and get hash
         const verifyRes = await fetch("http://localhost:3001/verifyFile", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ content: mockPlaintext, format: "txt" })
+            body: JSON.stringify({ content: dataToProcess, format: "txt" })
         });
         const verifyData = await verifyRes.json();
 
@@ -49,7 +55,7 @@ const handleSecureProcessing = async () => {
         // B2: Encrypt and upload
         setStatus("1/3: Encrypting via TACo Threshold Protocol...");
         const kit = await tacoEncryptPlaintext({
-            plaintext: mockPlaintext,
+            plaintext: dataToProcess,
             registryAddress: GDMREGISTRY_ADDRESS,
             tokenId,
         });

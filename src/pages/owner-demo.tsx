@@ -18,12 +18,6 @@ export default function OwnerDemo() {
         }
     };
 
-    // const handleAuthorizeProcessing = () => {
-    //     // call API or save local state
-    //     // Sequenced Center tab can recognize.
-    //     setStatus("Data authorized. Please switch to 'Sequenced Center' tab to process encryption.");
-    // };
-
 // handleAuthorizeProcessing
 const handleAuthorizeProcessing = async () => {
     try {
@@ -47,8 +41,11 @@ const handleAuthorizeProcessing = async () => {
 
         const result = await response.json();
 
-        if (!response.ok) {
-            // Show Garbage fault or Duplicate fault
+        if (response.ok) {
+            // LƯU DỮ LIỆU VÀO LOCALSTORAGE TẠI ĐÂY
+            localStorage.setItem("authorized_genomic_data", plaintext);
+            setStatus("Data verified. Authorized data saved for Sequenced Center.");
+        } else {
             setStatus(`Rejected: ${result.error}`);
             return;
         }

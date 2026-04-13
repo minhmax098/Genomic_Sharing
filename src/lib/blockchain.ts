@@ -78,16 +78,39 @@ export async function hasPurchased(tokenId: number, buyer: string) {
     return registry.hasPurchased(tokenId, buyer);
 }
 
+// export async function purchaseFullAccess(tokenId: number) {
+//     const registry = await getRegistryWriteContract();
+
+//     // 1. Read info directly from Smart Contract
+//     const publicRecord = await registry.getPublicRecord(tokenId);
+
+//     // 2. Get the EXACT price that the Contract is listing (located at position 5)
+//     const exactPrice = publicRecord[5];
+
+//     // 3. Pay the exact amount
+//     const tx = await registry.purchaseFullAccess(tokenId, {
+//         value: exactPrice,
+//     });
+
+//     await tx.wait();
+//     return tx.hash;
+// }
+
 export async function purchaseFullAccess(tokenId: number) {
     const registry = await getRegistryWriteContract();
 
-    // 1. Read info directly from Smart Contract
+    // 1. Đọc info trực tiếp từ Smart Contract
     const publicRecord = await registry.getPublicRecord(tokenId);
 
-    // 2. Get the EXACT price that the Contract is listing (located at position 5)
-    const exactPrice = publicRecord[5];
+    // 2. Lấy giá dựa trên tên thuộc tính (An toàn hơn dùng index)
+    // Nếu contract dùng struct, index 5 thường là 'price'
+    const exactPrice = publicRecord.price || publicRecord[5];
 
-    // 3. Pay the exact amount
+    if (!exactPrice) {
+        throw new Error("Could not determine the price for this Token ID");
+    }
+
+    // 3. Gửi giao dịch mua
     const tx = await registry.purchaseFullAccess(tokenId, {
         value: exactPrice,
     });
@@ -155,14 +178,29 @@ export async function registerSGD(input: {
 }
 
 // Get CID from the Blockchain (owner or bought can access)
+// export async function getCID(tokenId: number) {
+//     const registry = await getRegistryWriteContract();
+//     try {
+//         const cid = await registry.getCID(tokenId);
+//         return cid;
+//     }
+//     catch (error) {
+//         console.error("Error fetching CID from blockchain (not purchased or not entitled):", error);
+//         throw error;
+//     }
+// }
+// Trong file blockchain.ts
 export async function getCID(tokenId: number) {
-    const registry = await getRegistryWriteContract();
+    // Nếu contract dùng msg.sender để check quyền, bạn cần dùng WriteContract 
+    // hoặc đảm bảo ReadContract được kết nối với Signer.
+    const { signer } = await connectWallet();
+    const registry = new Contract(GDMREGISTRY_ADDRESS, registryAbi, signer);
+    
     try {
         const cid = await registry.getCID(tokenId);
         return cid;
-    }
-    catch (error) {
-        console.error("Error fetching CID from blockchain (not purchased or not entitled):", error);
+    } catch (error) {
+        console.error("Lỗi: Bạn chưa mua quyền truy cập cho Token này!");
         throw error;
     }
 }
