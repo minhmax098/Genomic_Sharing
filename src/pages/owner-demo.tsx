@@ -18,10 +18,48 @@ export default function OwnerDemo() {
         }
     };
 
-    const handleAuthorizeProcessing = () => {
-        // call API or save local state
-        // Sequenced Center tab can recognize.
-        setStatus("Data authorized. Please switch to 'Sequenced Center' tab to process encryption.");
+    // const handleAuthorizeProcessing = () => {
+    //     // call API or save local state
+    //     // Sequenced Center tab can recognize.
+    //     setStatus("Data authorized. Please switch to 'Sequenced Center' tab to process encryption.");
+    // };
+
+// handleAuthorizeProcessing
+const handleAuthorizeProcessing = async () => {
+    try {
+        if (!plaintext.trim()) {
+            setStatus("Please enter genomic data first.");
+            return;
+        }
+
+        setStatus("Verifying genomic data format...");
+
+        // Call API /verifyFile to check Garbage data 
+        const response = await fetch("http://localhost:3001/verifyFile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                content: plaintext,
+                format: "txt",
+                fileName: "genomic_data.txt"
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            // Show Garbage fault or Duplicate fault
+            setStatus(`Rejected: ${result.error}`);
+            return;
+        }
+
+        // If data is valid (Genomic data is in correct format and does not exist)
+        setStatus("Data verified. Please switch to 'Sequenced Center' tab to process encryption.");
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+            setStatus("Backend verification failed. Ensure server is running.");
+            setStatus("Error: " + errorMessage);
+        }
     };
 
     return (

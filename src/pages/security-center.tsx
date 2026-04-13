@@ -21,48 +21,74 @@ export default function SecurityCenter() {
         setStatus("Sequenced Center Node Connected");
     };
 
-    const handleSecureProcessing = async () => {
-        try {
-            setIsProcessing(true);
-            setIsFinished(false); // Reset status when starting
-            setStatus("1/3: Encrypting via TACo Threshold Protocol...");
-            
-            const mockPlaintext = "Hello SGD from Owner A"; 
+// Update handleSecureProcessing in SecurityCenter
+const handleSecureProcessing = async () => {
+    try {
+        setIsProcessing(true);
+        setIsFinished(false);
+        setStatus("Re-verifying data integrity and checking duplicates...");
 
-            const kit = await tacoEncryptPlaintext({
-                plaintext: mockPlaintext,
-                registryAddress: GDMREGISTRY_ADDRESS,
-                tokenId,
-            });
+        const mockPlaintext = "Hello SGD from Owner A"; // get from authorize state
 
-            setStatus("2/3: Uploading Secure Genomic Data (SGD) to IPFS...");
-            const kitBlob = new Blob([JSON.stringify(kit)], { type: "application/json" });
-            const cid = await uploadEncryptedToIPFS(kitBlob, `sgd_token_${tokenId}.taco`);
+        // B11: Check and get hash
+        const verifyRes = await fetch("http://localhost:3001/verifyFile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: mockPlaintext, format: "txt" })
+        });
+        const verifyData = await verifyRes.json();
 
-            setStatus("3/3: Recording Metadata on Ethereum Blockchain...");
-            await registerSGD({
-                initialOwner: address, 
-                sgdId: `SGD-SEC-${tokenId}`,
-                rgdId: "RGD-PRIMARY",
-                cid: cid,
-                accessCondition: "Paid Access",
-                price: "0.01",
-                collectionDate: Math.floor(Date.now() / 1000),
-                sampleType: "Genomic Sequence",
-                patientRef: "ANON-001",
-                consentCode: "CONSENT-YES",
-                sampleHash: "0x" + "0".repeat(40),
-                encryptionScheme: "TACo-Nucypher",
-                sequencingInfo: "Trusted Sequencing Center",
-                signatureRef: "0x" + "0".repeat(40),
-                encHash: "0x" + "0".repeat(40),
-                tokenURI: `ipfs://${cid}`,
-            });
-
-            setStatus(`Processing Complete. CID: ${cid.slice(0,10)}...`);
+        if (!verifyRes.ok) {
+            setStatus(`Stop: ${verifyData.error}`);
             setIsProcessing(false);
-            // 2. Mark as completed successfully
-            setIsFinished(true); 
+            return;
+        }
+
+        const currentHash = verifyData.hash;
+
+        // B2: Encrypt and upload
+        setStatus("1/3: Encrypting via TACo Threshold Protocol...");
+        const kit = await tacoEncryptPlaintext({
+            plaintext: mockPlaintext,
+            registryAddress: GDMREGISTRY_ADDRESS,
+            tokenId,
+        });
+
+        setStatus("2/3: Uploading Secure Genomic Data (SGD) to IPFS...");
+        const kitBlob = new Blob([JSON.stringify(kit)], { type: "application/json" });
+        const cid = await uploadEncryptedToIPFS(kitBlob, `sgd_token_${tokenId}.taco`);
+
+        setStatus("3/3: Recording Metadata on Ethereum Blockchain...");
+        await registerSGD({
+            initialOwner: address, 
+            sgdId: `SGD-SEC-${tokenId}`,
+            rgdId: "RGD-PRIMARY",
+            cid: cid,
+            accessCondition: "Paid Access",
+            price: "0.01",
+            collectionDate: Math.floor(Date.now() / 1000),
+            sampleType: "Genomic Sequence",
+            patientRef: "ANON-001",
+            consentCode: "CONSENT-YES",
+            sampleHash: "0x" + "0".repeat(40),
+            encryptionScheme: "TACo-Nucypher",
+            sequencingInfo: "Trusted Sequencing Center",
+            signatureRef: "0x" + "0".repeat(40),
+            encHash: "0x" + "0".repeat(40),
+            tokenURI: `ipfs://${cid}`,
+        });
+
+        // B3: Save hash to database after blockchain success
+        await fetch("http://localhost:3001/commit-hash", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ hash: currentHash })
+        });
+
+        setStatus(`Processing Complete. CID: ${cid.slice(0,10)}... and Hash committed.`);
+        setIsProcessing(false);
+        setIsFinished(true); 
+
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
             setStatus("Error: " + errorMessage);
