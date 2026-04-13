@@ -42,7 +42,7 @@ const handleAuthorizeProcessing = async () => {
         const result = await response.json();
 
         if (response.ok) {
-            // LƯU DỮ LIỆU VÀO LOCALSTORAGE TẠI ĐÂY
+            // Save into localstorage
             localStorage.setItem("authorized_genomic_data", plaintext);
             setStatus("Data verified. Authorized data saved for Sequenced Center.");
         } else {
