@@ -1,3 +1,4 @@
+// Sequenced Center page
 import { useState } from "react";
 import { connectWallet } from "../lib/wallet";
 import { getContractAddresses, registerSGD } from "../lib/blockchain";
@@ -9,6 +10,8 @@ export default function SecurityCenter() {
     const [tokenId, setTokenId] = useState(1);
     const [status, setStatus] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
+    // check status is completed or not
+    const [isFinished, setIsFinished] = useState(false);
 
     const { GDMREGISTRY_ADDRESS } = getContractAddresses();
 
@@ -21,9 +24,9 @@ export default function SecurityCenter() {
     const handleSecureProcessing = async () => {
         try {
             setIsProcessing(true);
+            setIsFinished(false); // Reset status when starting
             setStatus("1/3: Encrypting via TACo Threshold Protocol...");
             
-            // Lấy dữ liệu (giả định lấy từ Owner đã authorize)
             const mockPlaintext = "Hello SGD from Owner A"; 
 
             const kit = await tacoEncryptPlaintext({
@@ -38,7 +41,7 @@ export default function SecurityCenter() {
 
             setStatus("3/3: Recording Metadata on Ethereum Blockchain...");
             await registerSGD({
-                initialOwner: "0xAddress_Of_Owner_Here", // Địa chỉ của Owner thực sự
+                initialOwner: address, 
                 sgdId: `SGD-SEC-${tokenId}`,
                 rgdId: "RGD-PRIMARY",
                 cid: cid,
@@ -58,12 +61,13 @@ export default function SecurityCenter() {
 
             setStatus(`Processing Complete. CID: ${cid.slice(0,10)}...`);
             setIsProcessing(false);
+            // 2. Mark as completed successfully
+            setIsFinished(true); 
         } catch (error: unknown) {
-            // setStatus("Error: " + error.message);
-            // setIsProcessing(false);
             const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
             setStatus("Error: " + errorMessage);
             setIsProcessing(false);
+            setIsFinished(false);
         }
     };
 
@@ -87,15 +91,33 @@ export default function SecurityCenter() {
                 <section className="card">
                     <div className="field-group">
                         <label className="field-label">Target Token ID</label>
-                        <input className="text-input" type="number" value={tokenId} onChange={e => setTokenId(Number(e.target.value))} />
+                        <input 
+                            className="text-input" 
+                            type="number" 
+                            value={tokenId} 
+                            // 3. Allow changing ID to process other tokens if already completed
+                            onChange={e => {
+                                setTokenId(Number(e.target.value));
+                                setIsFinished(false); // Reset status when changing ID
+                            }} 
+                        />
                     </div>
+                    {/* 4. Update display logic and disable button */}
                     <button 
                         className="primary-btn" 
                         onClick={handleSecureProcessing}
-                        disabled={isProcessing || !address}
-                        style={{width: '100%', background: isProcessing ? '#94a3b8' : '#6366f1'}}
+                        disabled={isProcessing || !address || isFinished}
+                        style={{
+                            width: '100%', 
+                            background: (isProcessing || isFinished) ? '#94a3b8' : '#6366f1',
+                            cursor: (isProcessing || isFinished) ? 'not-allowed' : 'pointer'
+                        }}
                     >
-                        {isProcessing ? "Processing..." : "Start Secure Encryption Flow"}
+                        {isProcessing 
+                            ? "Processing..." 
+                            : isFinished 
+                                ? "Data Registered Successfully" 
+                                : "Start Secure Encryption Flow"}
                     </button>
                     <div className="status-box" style={{marginTop: '20px'}}>
                         <strong>{status || "Ready to process authorized data..."}</strong>
