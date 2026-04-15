@@ -4,7 +4,7 @@ import { connectWallet, switchToSepolia } from "../lib/wallet";
 
 export default function OwnerDemo() {
     const [address, setAddress] = useState("");
-    const [plaintext, setPlaintext] = useState("Hello SGD from Owner A");
+    const [plaintext, setPlaintext] = useState("");
     const [status, setStatus] = useState("");
 
     const handleConnect = async () => {

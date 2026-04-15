@@ -152,7 +152,7 @@ function App() {
             </h1>
             <p className="hero-text">
               Developed for Admin,
-              Owner, and Buyer workflows with TACo encryption, NFT-based access,
+              Owner, Sequenced Center and Buyer workflows with TACo encryption, NFT-based access,
               and on-chain purchase validation.
             </p>
 
@@ -190,7 +190,7 @@ function App() {
           <div className="feature-card">
             <h4>Role-based navigation</h4>
             <p>
-              Admin, Owner, and Buyer.
+              Admin, Owner, Sequenced Center and Buyer.
             </p>
           </div>
 
