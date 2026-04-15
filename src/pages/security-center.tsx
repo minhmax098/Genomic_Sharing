@@ -36,7 +36,7 @@ const handleSecureProcessing = async () => {
             return;
         }
 
-        // B11: Check and get hash
+        // B1: Check and get hash
         const verifyRes = await fetch("http://localhost:3001/verifyFile", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -114,7 +114,7 @@ const handleSecureProcessing = async () => {
                         We perform heavy computation, encryption, and decentralized storage tasks.
                     </p>
                 </div>
-                <button className="primary-btn" onClick={handleConnect} style={{background: '#6366f1'}}>
+                <button className="primary-btn" onClick={handleConnect}>
                     {address ? "Node Active" : "Connect Sequenced Center Node"}
                 </button>
             </div>
@@ -141,7 +141,7 @@ const handleSecureProcessing = async () => {
                         disabled={isProcessing || !address || isFinished}
                         style={{
                             width: '100%', 
-                            background: (isProcessing || isFinished) ? '#94a3b8' : '#6366f1',
+                            background: (isProcessing || isFinished) ? '#456347' : '#13a538',
                             cursor: (isProcessing || isFinished) ? 'not-allowed' : 'pointer'
                         }}
                     >
