@@ -1,4 +1,4 @@
-// buyer page
+// Buyer page
 import { useState } from "react";
 import { connectWallet, switchToSepolia } from "../lib/wallet";
 import { getPublicRecord, hasPurchased, purchaseFullAccess, getCID } from "../lib/blockchain";

@@ -1,11 +1,9 @@
-// ipfs: upload and download encrypted data to/from IPFS (Pinata)
+// IPFS: upload and download encrypted data to/from IPFS (Pinata)
 import axios from 'axios';
 
 const JWT = import.meta.env.VITE_PINATA_JWT;
 
-/**
- * Upload encrypted data to IPFS (Pinata)
- */
+// Upload encrypted data to IPFS (Pinata)
 export const uploadEncryptedToIPFS = async (data: Blob | File, fileName: string) => {
     const formData = new FormData();
     formData.append('file', data, fileName);
@@ -30,9 +28,7 @@ export const uploadEncryptedToIPFS = async (data: Blob | File, fileName: string)
     }
 };
 
-/**
- * Fetch data from IPFS for Buyer
- */
+// Fetch data from IPFS for Buyer
 export const fetchFromIPFS = async (cid: string) => {
     try {
         // 1. Get gateway from .env, if it fails then use the default of Pinata for demo purposes
