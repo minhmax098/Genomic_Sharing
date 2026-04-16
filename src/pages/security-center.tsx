@@ -4,6 +4,8 @@ import { connectWallet } from "../lib/wallet";
 import { getContractAddresses, registerSGD } from "../lib/blockchain";
 import { tacoEncryptPlaintext } from "../lib/tacoEncrypt";
 import { uploadEncryptedToIPFS } from "../lib/ipfs";
+import { createSafeProposal } from "../lib/safeService";
+import { ethers } from "ethers";
 
 export default function SecurityCenter() {
     const [address, setAddress] = useState("");
@@ -12,6 +14,7 @@ export default function SecurityCenter() {
     const [isProcessing, setIsProcessing] = useState(false);
     // check status is completed or not
     const [isFinished, setIsFinished] = useState(false);
+    const [safeAddress, setSafeAddress] = useState("");
 
     const { GDMREGISTRY_ADDRESS } = getContractAddresses();
 
@@ -64,43 +67,105 @@ const handleSecureProcessing = async () => {
         const kitBlob = new Blob([JSON.stringify(kit)], { type: "application/json" });
         const cid = await uploadEncryptedToIPFS(kitBlob, `sgd_token_${tokenId}.taco`);
 
-        setStatus("3/3: Recording Metadata on Ethereum Blockchain...");
-        await registerSGD({
-            initialOwner: address, 
-            sgdId: `SGD-SEC-${tokenId}`,
-            rgdId: "RGD-PRIMARY",
-            cid: cid,
-            accessCondition: "Paid Access",
-            price: "0.01",
-            collectionDate: Math.floor(Date.now() / 1000),
-            sampleType: "Genomic Sequence",
-            patientRef: "ANON-001",
-            consentCode: "CONSENT-YES",
-            sampleHash: "0x" + "0".repeat(40),
-            encryptionScheme: "TACo-Nucypher",
-            sequencingInfo: "Trusted Sequencing Center",
-            signatureRef: "0x" + "0".repeat(40),
-            encHash: "0x" + "0".repeat(40),
-            tokenURI: `ipfs://${cid}`,
-        });
+        // setStatus("3/3: Recording Metadata on Ethereum Blockchain...");
+        // await registerSGD({
+        //     initialOwner: address, 
+        //     sgdId: `SGD-SEC-${tokenId}`,
+        //     rgdId: "RGD-PRIMARY",
+        //     cid: cid,
+        //     accessCondition: "Paid Access",
+        //     price: "0.01",
+        //     collectionDate: Math.floor(Date.now() / 1000),
+        //     sampleType: "Genomic Sequence",
+        //     patientRef: "ANON-001",
+        //     consentCode: "CONSENT-YES",
+        //     sampleHash: "0x" + "0".repeat(40),
+        //     encryptionScheme: "TACo-Nucypher",
+        //     sequencingInfo: "Trusted Sequencing Center",
+        //     signatureRef: "0x" + "0".repeat(40),
+        //     encHash: "0x" + "0".repeat(40),
+        //     tokenURI: `ipfs://${cid}`,
+        // });
 
-        // B3: Save hash to database after blockchain success
-        await fetch("http://localhost:3001/commit-hash", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ hash: currentHash })
-        });
+        // // B3: Save hash to database after blockchain success
+        // await fetch("http://localhost:3001/commit-hash", {
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify({ hash: currentHash })
+        // });
 
-        setStatus(`Processing Complete. CID: ${cid.slice(0,10)}... and Hash committed.`);
+        // B3: Logic Đăng ký hoặc Tạo Proposal
+        if (safeAddress && ethers.isAddress(safeAddress)) {
+            setStatus("3/3: Creating Safe Multi-sig Proposal...");
+            
+            // Khởi tạo Interface để encode dữ liệu hàm registerSGD
+            const registryInterface = new ethers.Interface([
+                "function registerSGD(address initialOwner, string sgdId, string rgdId, string cid, string accessCondition, string price, uint256 collectionDate, string sampleType, string patientRef, string consentCode, bytes32 sampleHash, string encryptionScheme, string sequencingInfo, bytes32 signatureRef, string tokenURI)"
+            ]);
+
+            const txData = {
+                to: GDMREGISTRY_ADDRESS,
+                data: registryInterface.encodeFunctionData("registerSGD", [
+                    address, 
+                    `SGD-SEC-${tokenId}`, 
+                    "RGD-PRIMARY", 
+                    cid, 
+                    "Paid Access", 
+                    "0.01", 
+                    Math.floor(Date.now() / 1000), 
+                    "Genomic Sequence", 
+                    "ANON-001", 
+                    "CONSENT-YES", 
+                    ethers.ZeroHash, 
+                    "TACo-Nucypher", 
+                    "Trusted Sequencing Center", 
+                    ethers.ZeroHash, 
+                    `ipfs://${cid}`
+                ]),
+                value: "0"
+            };
+
+            const txHash = await createSafeProposal(safeAddress, txData);
+            setStatus(`Proposal Pending! Hash: ${txHash.slice(0, 10)}... Please approve on Safe Dashboard.`);
+        } else {
+            setStatus("3/3: Recording Directly on Blockchain...");
+            await registerSGD({
+                initialOwner: address, 
+                sgdId: `SGD-SEC-${tokenId}`,
+                rgdId: "RGD-PRIMARY",
+                cid: cid,
+                accessCondition: "Paid Access",
+                price: "0.01",
+                collectionDate: Math.floor(Date.now() / 1000),
+                sampleType: "Genomic Sequence",
+                patientRef: "ANON-001",
+                consentCode: "CONSENT-YES",
+                sampleHash: ethers.ZeroHash,
+                encryptionScheme: "TACo-Nucypher",
+                sequencingInfo: "Trusted Sequencing Center",
+                signatureRef: ethers.ZeroHash,
+                encHash: ethers.ZeroHash,
+                tokenURI: `ipfs://${cid}`,
+            });
+            
+            // Chỉ commit hash nếu đăng ký trực tiếp thành công
+            await fetch("http://localhost:3001/commit-hash", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ hash: currentHash })
+            });
+            setStatus(`Processing Complete. CID: ${cid.slice(0,10)}...`);
+        }
+
+        // setStatus(`Processing Complete. CID: ${cid.slice(0,10)}... and Hash committed.`);
         setIsProcessing(false);
         setIsFinished(true); 
-
-        } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-            setStatus("Error: " + errorMessage);
-            setIsProcessing(false);
-            setIsFinished(false);
-        }
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+        setStatus("Error: " + errorMessage);
+        setIsProcessing(false);
+        setIsFinished(false);
+    }
     };
 
     return (
@@ -114,6 +179,19 @@ const handleSecureProcessing = async () => {
                         We perform heavy computation, encryption, and decentralized storage tasks.
                     </p>
                 </div>
+
+                {/* 3. Thêm input nhập địa chỉ Safe */}
+                <div className="field-group" style={{ marginBottom: '20px' }}>
+                    <label className="field-label">Safe Multi-sig Address (Optional)</label>
+                    <input 
+                        className="text-input" 
+                        type="text" 
+                        placeholder="0x... (Leave blank for direct register)" 
+                        value={safeAddress} 
+                        onChange={e => setSafeAddress(e.target.value)} 
+                    />
+                </div>
+
                 <button className="primary-btn" onClick={handleConnect}>
                     {address ? "Node Active" : "Connect Sequenced Center Node"}
                 </button>
@@ -134,6 +212,7 @@ const handleSecureProcessing = async () => {
                             }} 
                         />
                     </div>
+                    
                     {/* 4. Update display logic and disable button */}
                     <button 
                         className="primary-btn" 
