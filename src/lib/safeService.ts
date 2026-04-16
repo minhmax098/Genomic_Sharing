@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 // create connection to Safe Transaction Service
 const apikit = new SafeApiKit({
     chainId: 11155111n,
-    txServiceUrl: 'https://safe-transaction-sepolia.safe.global'
+    txServiceUrl: 'https://api.safe.global/tx-service/sep'
 });
 
 export const createSafeProposal = async (
