@@ -44,14 +44,14 @@ const handleAuthorizeProcessing = async () => {
         if (response.ok) {
             // Save into localstorage
             localStorage.setItem("authorized_genomic_data", plaintext);
-            setStatus("Data verified. Authorized data saved for Sequenced Center.");
+            setStatus("Data verified. Authorized data saved for Sequencing Center.");
         } else {
             setStatus(`Rejected: ${result.error}`);
             return;
         }
 
         // If data is valid (Genomic data is in correct format and does not exist)
-        setStatus("Data verified. Please switch to 'Sequenced Center' tab to process encryption.");
+        setStatus("Data verified. Please switch to 'Sequencing Center' tab to process encryption.");
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
             setStatus("Backend verification failed. Ensure server is running.");
@@ -67,7 +67,7 @@ const handleAuthorizeProcessing = async () => {
                     <h2>1. Provide & Authorize Data</h2>
                     <p className="section-copy">
                         As a Data Owner, you only need to provide your genomic information 
-                        and authorize the Sequenced Center to handle the technical encryption process.
+                        and authorize the Sequencing Center to handle the technical encryption process.
                     </p>
                 </div>
                 <button className="primary-btn" onClick={handleConnect}>
@@ -89,7 +89,7 @@ const handleAuthorizeProcessing = async () => {
                     </div>
                     <div className="action-row">
                         <button className="primary-btn" onClick={handleAuthorizeProcessing}>
-                            Authorize for Sequenced Center
+                            Authorize for Sequencing Center
                         </button>
                     </div>
                     <div className="status-box" style={{marginTop: '20px'}}>
@@ -103,7 +103,7 @@ const handleAuthorizeProcessing = async () => {
                     <ul className="flow-list">
                         <li>Maintain ownership of Raw Genomic Data (RGD).</li>
                         <li>Define access policies and pricing.</li>
-                        <li>Grant processing permission to the Trusted Sequenced Center.</li>
+                        <li>Grant processing permission to the Trusted Sequencing Center.</li>
                     </ul>
                 </aside>
             </div>
