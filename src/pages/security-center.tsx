@@ -1,4 +1,4 @@
-// Sequenced Center page
+// Sequencing Center page
 import { useState } from "react";
 import { connectWallet } from "../lib/wallet";
 import { getContractAddresses, registerSGD } from "../lib/blockchain";
@@ -21,7 +21,7 @@ export default function SecurityCenter() {
     const handleConnect = async () => {
         const { address } = await connectWallet();
         setAddress(address);
-        setStatus("Sequenced Center Node Connected");
+        setStatus("Sequencing Center Node Connected");
     };
 
 // Update handleSecureProcessing in SecurityCenter
@@ -172,10 +172,10 @@ const handleSecureProcessing = async () => {
         <div className="demo-page">
             <div className="demo-header">
                 <div>
-                    <p className="section-tag">Sequenced Center</p>
+                    <p className="section-tag">Sequencing Center</p>
                     <h2>2. Secure Processing & Encryption</h2>
                     <p className="section-copy">
-                        The Sequenced Center acts as a Trusted Execution Environment. 
+                        The Sequencing Center acts as a Trusted Execution Environment. 
                         We perform heavy computation, encryption, and decentralized storage tasks.
                     </p>
                 </div>
@@ -193,7 +193,7 @@ const handleSecureProcessing = async () => {
                 </div>
 
                 <button className="primary-btn" onClick={handleConnect}>
-                    {address ? "Node Active" : "Connect Sequenced Center Node"}
+                    {address ? "Node Active" : "Connect Sequencing Center Node"}
                 </button>
             </div>
 

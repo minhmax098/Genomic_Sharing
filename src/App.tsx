@@ -60,7 +60,7 @@ function AdminOverview() {
             </div>
 
             <div className="feature-card">
-              <h4>Sequenced Center</h4>
+              <h4>Sequencing Center</h4>
               <p>
                 Connect wallet, prepare TACo encryption, and upload encrypted
                 payload to IPFS for a specific token.
@@ -130,7 +130,7 @@ function App() {
               className={`nav-tab ${activeTab === "sequenced" ? "active" : ""}`}
               onClick={() => setActiveTab("sequenced")}
             >
-              Sequenced Center
+              Sequencing Center
             </button>
             <button
               className={`nav-tab ${activeTab === "buyer" ? "active" : ""}`}
@@ -152,7 +152,7 @@ function App() {
             </h1>
             <p className="hero-text">
               Developed for Admin,
-              Owner, Sequenced Center and Buyer workflows with TACo encryption, NFT-based access,
+              Owner, Sequencing Center and Buyer workflows with TACo encryption, NFT-based access,
               and on-chain purchase validation.
             </p>
 
@@ -190,7 +190,7 @@ function App() {
           <div className="feature-card">
             <h4>Role-based navigation</h4>
             <p>
-              Admin, Owner, Sequenced Center and Buyer.
+              Admin, Owner, Sequencing Center and Buyer.
             </p>
           </div>
 
