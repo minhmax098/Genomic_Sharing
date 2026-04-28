@@ -116,7 +116,7 @@ const handleAuthorizeProcessing = async () => {
                     <ul className="flow-list">
                         <li>Maintain ownership of Raw Genomic Data (RGD).</li>
                         <li>Define access policies and pricing.</li>
-                        <li>Provide Secret Code received from Admin/Hospital to authorize registration</li>
+                        <li>Provide Secret Code received from Admin/Hospital to authorize registration.</li>
                         <li>Grant processing permission to the Trusted Sequencing Center.</li>
                     </ul>
                 </aside>
