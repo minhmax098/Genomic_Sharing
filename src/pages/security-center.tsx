@@ -31,7 +31,11 @@ const handleSecureProcessing = async () => {
         setIsFinished(false);
         setStatus("Re-verifying data integrity and checking duplicates...");
 
+        // Retrieve the data and ID from the Owner step that has been saved to localStorage.
         const dataToProcess = localStorage.getItem("authorized_genomic_data") || "";
+
+        // Save RGD_ID in the previous step.
+        const rgdIdForRef = localStorage.getItem("authorized_rgd_id") || `RGD-NFT-${tokenId}`;
 
         if (!dataToProcess) {
             setStatus("Error: No authorized data found from Owner.");
@@ -40,6 +44,7 @@ const handleSecureProcessing = async () => {
         }
 
         // B1: Check and get hash
+        setStatus("Verifying data integrity & checking for duplicates...");
         const verifyRes = await fetch("http://localhost:3001/verifyFile", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -63,42 +68,16 @@ const handleSecureProcessing = async () => {
             tokenId,
         });
 
+        // B3: Upload to IPFS
         setStatus("2/3: Uploading Secure Genomic Data (SGD) to IPFS...");
         const kitBlob = new Blob([JSON.stringify(kit)], { type: "application/json" });
         const cid = await uploadEncryptedToIPFS(kitBlob, `sgd_token_${tokenId}.taco`);
 
-        // setStatus("3/3: Recording Metadata on Ethereum Blockchain...");
-        // await registerSGD({
-        //     initialOwner: address, 
-        //     sgdId: `SGD-SEC-${tokenId}`,
-        //     rgdId: "RGD-PRIMARY",
-        //     cid: cid,
-        //     accessCondition: "Paid Access",
-        //     price: "0.01",
-        //     collectionDate: Math.floor(Date.now() / 1000),
-        //     sampleType: "Genomic Sequence",
-        //     patientRef: "ANON-001",
-        //     consentCode: "CONSENT-YES",
-        //     sampleHash: "0x" + "0".repeat(40),
-        //     encryptionScheme: "TACo-Nucypher",
-        //     sequencingInfo: "Trusted Sequencing Center",
-        //     signatureRef: "0x" + "0".repeat(40),
-        //     encHash: "0x" + "0".repeat(40),
-        //     tokenURI: `ipfs://${cid}`,
-        // });
-
-        // // B3: Save hash to database after blockchain success
-        // await fetch("http://localhost:3001/commit-hash", {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify({ hash: currentHash })
-        // });
-
-        // B3: Logic Đăng ký hoặc Tạo Proposal
+        // B4: Write to Blockchain
         if (safeAddress && ethers.isAddress(safeAddress)) {
             setStatus("3/3: Creating Safe Multi-sig Proposal...");
             
-            // Khởi tạo Interface để encode dữ liệu hàm registerSGD
+            // Initialize the interface to encode the data for the registerSGD function.
             const registryInterface = new ethers.Interface([
                 "function registerSGD(address initialOwner, string sgdId, string rgdId, string cid, string accessCondition, string price, uint256 collectionDate, string sampleType, string patientRef, string consentCode, bytes32 sampleHash, string encryptionScheme, string sequencingInfo, bytes32 signatureRef, string tokenURI)"
             ]);
@@ -132,7 +111,7 @@ const handleSecureProcessing = async () => {
             await registerSGD({
                 initialOwner: address, 
                 sgdId: `SGD-SEC-${tokenId}`,
-                rgdId: "RGD-PRIMARY",
+                rgdId: rgdIdForRef,
                 cid: cid,
                 accessCondition: "Paid Access",
                 price: "0.01",
@@ -140,7 +119,7 @@ const handleSecureProcessing = async () => {
                 sampleType: "Genomic Sequence",
                 patientRef: "ANON-001",
                 consentCode: "CONSENT-YES",
-                sampleHash: ethers.ZeroHash,
+                sampleHash: currentHash,
                 encryptionScheme: "TACo-Nucypher",
                 sequencingInfo: "Trusted Sequencing Center",
                 signatureRef: ethers.ZeroHash,
@@ -148,7 +127,7 @@ const handleSecureProcessing = async () => {
                 tokenURI: `ipfs://${cid}`,
             });
             
-            // Chỉ commit hash nếu đăng ký trực tiếp thành công
+            // Only commit the hash if the direct registration is successful.
             await fetch("http://localhost:3001/commit-hash", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -180,7 +159,7 @@ const handleSecureProcessing = async () => {
                     </p>
                 </div>
 
-                {/* 3. Thêm input nhập địa chỉ Safe */}
+                {/* 3. Add an input field for the Safe address. */}
                 <div className="field-group" style={{ marginBottom: '20px' }}>
                     <label className="field-label">Safe Multi-sig Address (Optional)</label>
                     <input 
