@@ -93,7 +93,7 @@ export async function purchaseFullAccess(tokenId: number) {
     // if contract uses struct, index 5 is 'price'
     const exactPrice = publicRecord.price || publicRecord[5];
 
-    if (!exactPrice) {
+    if (!exactPrice || exactPrice.toString() === "0") {
         throw new Error("Could not determine the price for this Token ID");
     }
 
@@ -166,17 +166,67 @@ export async function registerSGD(input: {
 }
 
 // Get CID from the Blockchain (owner or bought can access)
+// export async function getCID(tokenId: number) {
+//     // Nếu contract dùng msg.sender để check quyền, bạn cần dùng WriteContract 
+//     // hoặc đảm bảo ReadContract được kết nối với Signer.
+//     const { signer, address } = await connectWallet();
+//     const registry = new Contract(GDMREGISTRY_ADDRESS, registryAbi, signer);
+    
+//     try {
+//         // 1. Kiểm tra quyền mua thực tế
+//         const purchased = await registry.hasPurchased(tokenId, address);
+        
+//         // 2. Sử dụng biến purchased để kiểm tra logic
+//         if (!purchased) {
+//             // Kiểm tra thêm nếu là chủ sở hữu (Owner) thì vẫn có quyền xem
+//             const owner = await registry.ownerOf(tokenId).catch(() => "");
+//             if (owner.toLowerCase() !== address.toLowerCase()) {
+//                 throw new Error("Bạn không có quyền truy cập CID. Vui lòng mua quyền truy cập trước.");
+//             }
+//         }
+
+//         // 3. Nếu đã mua hoặc là chủ sở hữu, tiến hành lấy CID
+//         const cid = await registry.getCID(tokenId);
+//         return cid;
+//     } catch (error: unknown) {
+//         if (error instanceof Error) {
+//             if (error.message.includes("execution reverted")) {
+//                 throw new Error("Lỗi hệ thống Blockchain: Không thể truy xuất dữ liệu.");
+//             }
+//             throw error;
+//         }
+//         throw new Error("An unknown error occurred");
+//     }
+// }
 export async function getCID(tokenId: number) {
-    // Nếu contract dùng msg.sender để check quyền, bạn cần dùng WriteContract 
-    // hoặc đảm bảo ReadContract được kết nối với Signer.
-    const { signer } = await connectWallet();
+    const { signer, address } = await connectWallet();
+    // 1. Contract Registry để lấy CID và check Purchase
     const registry = new Contract(GDMREGISTRY_ADDRESS, registryAbi, signer);
+    // 2. Contract NFT để check chủ sở hữu (Sửa lỗi tại đây)
+    const nft = new Contract(SGDNFT_ADDRESS, nftAbi, signer);
     
     try {
+        // Kiểm tra xem đã mua chưa
+        const purchased = await registry.hasPurchased(tokenId, address);
+        
+        if (!purchased) {
+            // Kiểm tra xem có phải chủ sở hữu NFT không
+            // Gọi nft.ownerOf thay vì registry.ownerOf
+            const owner = await nft.ownerOf(tokenId).catch(() => "");
+            
+            if (owner.toLowerCase() !== address.toLowerCase()) {
+                throw new Error("Bạn không có quyền truy cập CID. Vui lòng mua quyền truy cập trước.");
+            }
+        }
+
+        // Nếu hợp lệ, lấy CID
         const cid = await registry.getCID(tokenId);
         return cid;
-    } catch (error) {
-        console.error("Lỗi: Bạn chưa mua quyền truy cập cho Token này!");
+
+    } catch (error: unknown) {
+        if (error instanceof Error && error.message.includes("ownerOf")) {
+            throw new Error("Token ID không tồn tại hoặc lỗi contract NFT.");
+        }
         throw error;
     }
 }

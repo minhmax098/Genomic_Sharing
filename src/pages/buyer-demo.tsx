@@ -109,7 +109,13 @@ export default function BuyerDemo() {
             const kitText = await new Response(kitData).text();
             const kit = JSON.parse(kitText);
 
-            setCurrentKit(kit);
+            if (kit.messageKit) {
+                setCurrentKit(kit.messageKit);
+            }
+            else {
+                setCurrentKit(kit);
+            }
+            
             setMessageKitAvailable(true);
             setStatus("Encrypted payload loaded successfully from IPFS");
 

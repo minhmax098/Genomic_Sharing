@@ -91,7 +91,7 @@ const handleAuthorizeProcessing = async () => {
                             onChange={(e) => setPlaintext(e.target.value)}
                             placeholder="Enter genomic sequence here..."
                         />
-                        <label className="field-label">Secret Code (for Sequencing Center)</label>
+                        <label className="field-label">Code (for Sequencing Center)</label>
                         <input
                             className="text-input"
                             type="password"  // use password to hide the code input
