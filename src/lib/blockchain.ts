@@ -11,6 +11,7 @@ import { connectWallet, getBrowserProvider } from "./wallet";
 type ContractAddresses = {
     GDMREGISTRY_ADDRESS: string;
     SGDNFT_ADDRESS: string;
+    RGDNFT_ADDRESS: string;
     network?: string;
 };
 
@@ -43,6 +44,10 @@ const GDMREGISTRY_ADDRESS =
 const SGDNFT_ADDRESS =
     import.meta.env.VITE_SGDNFT_ADDRESS ||
     addresses.SGDNFT_ADDRESS;
+
+const RGDNFT_ADDRESS =
+    import.meta.env.VITE_RGDNFT_ADDRESS ||
+    addresses.RGDNFT_ADDRESS;
 
 const registryAbi = getAbi(registryArtifact);
 
@@ -121,6 +126,7 @@ export function getContractAddresses() {
     return {
         GDMREGISTRY_ADDRESS,
         SGDNFT_ADDRESS,
+        RGDNFT_ADDRESS,
     };
 }
 
