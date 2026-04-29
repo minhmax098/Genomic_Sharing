@@ -65,7 +65,6 @@ export async function tacoEncryptPlaintext(params: {
     // use web3Provider to obtain the owner's signature to prove ownership.
     const web3Provider = new Web3Provider(window.ethereum as unknown as ExternalProvider);
     // jsonRpcProvider points to Amoy (Polygon) network for covert communication with the TACo network.
-    // const tacoNodeProvider = new JsonRpcProvider("https://rpc-amoy.polygon.technology/");
     const tacoNodeProvider = new JsonRpcProvider("https://polygon-amoy-bor-rpc.publicnode.com");
 
     type TacoEncryptProvider = Parameters<typeof encrypt>[0];
