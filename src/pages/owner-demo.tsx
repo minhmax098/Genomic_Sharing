@@ -48,7 +48,7 @@ const handleAuthorizeProcessing = async () => {
             // Save into localstorage
             // save both data and code to localStorage for SC to use in the next step
             localStorage.setItem("authorized_genomic_data", plaintext);
-            localStorage.setItem("owner_secret_code", secretCode);
+            localStorage.setItem("authorized_secret_code", secretCode);
             setStatus("Verification successful! Data and Code authorized for Sequencing Center.");
         } else {
             setStatus(`Rejected: ${result.error}`);
