@@ -34,6 +34,9 @@ const handleSecureProcessing = async () => {
         // Retrieve the data and ID from the Owner step that has been saved to localStorage.
         const dataToProcess = localStorage.getItem("authorized_genomic_data") || "";
 
+        // secret code 
+        const secretCode = localStorage.getItem("authorized_secret_code") || ""; 
+
         // Save RGD_ID in the previous step.
         const rgdIdForRef = localStorage.getItem("authorized_rgd_id") || `RGD-NFT-${tokenId}`;
 
@@ -48,8 +51,13 @@ const handleSecureProcessing = async () => {
         const verifyRes = await fetch("http://localhost:3001/verifyFile", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ content: dataToProcess, format: "txt" })
+            body: JSON.stringify({ 
+                content: dataToProcess, 
+                format: "txt", 
+                secretCode: secretCode // send code to the BE/hospital for verification})
+            })
         });
+
         const verifyData = await verifyRes.json();
 
         if (!verifyRes.ok) {
