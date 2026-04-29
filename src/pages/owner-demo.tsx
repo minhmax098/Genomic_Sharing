@@ -48,7 +48,7 @@ const handleAuthorizeProcessing = async () => {
             // Save into localstorage
             // save both data and code to localStorage for SC to use in the next step
             localStorage.setItem("authorized_genomic_data", plaintext);
-            localStorage.setItem("owner_secret_code", secretCode);
+            localStorage.setItem("authorized_secret_code", secretCode);
             setStatus("Verification successful! Data and Code authorized for Sequencing Center.");
         } else {
             setStatus(`Rejected: ${result.error}`);
@@ -91,7 +91,7 @@ const handleAuthorizeProcessing = async () => {
                             onChange={(e) => setPlaintext(e.target.value)}
                             placeholder="Enter genomic sequence here..."
                         />
-                        <label className="field-label">Secret Code (for Sequencing Center)</label>
+                        <label className="field-label">Code (for Sequencing Center)</label>
                         <input
                             className="text-input"
                             type="password"  // use password to hide the code input

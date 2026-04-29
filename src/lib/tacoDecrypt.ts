@@ -35,15 +35,20 @@ export async function tacoDecryptToBytes(params: any) {
             extracted = extracted.messageKit;
         }
         // if JSON string
-        if (typeof extracted === 'string' && extracted.trim().startsWith('{')) {
-            try 
-                { 
-                    extracted = JSON.parse(extracted);
-                } 
-            catch
-                {
-                    // console.warn("Not parse JSON, keep it:", e);
-                }
+        // if (typeof extracted === 'string' && extracted.trim().startsWith('{')) {
+        //     try 
+        //         { 
+        //             extracted = JSON.parse(extracted);
+        //         } 
+        //     catch
+        //         {
+        //             // console.warn("Not parse JSON, keep it:", e);
+        //         }
+        // }
+        if (typeof extracted === 'string') {
+            // Loại bỏ dấu ngoặc kép hoặc khoảng trắng dư thừa
+            const cleanHex = extracted.replace(/["\s]/g, '').replace(/[^a-fA-F0-9]/g, '');
+            messageKit = ThresholdMessageKit.fromBytes(fromHexString(cleanHex));
         }
         // If parse return again object)
         if (extracted && extracted.messageKit !== undefined) {
@@ -75,7 +80,8 @@ export async function tacoDecryptToBytes(params: any) {
     );
 
     // 2. Provider connects Amoy network (Polygon)
-    const tacoNodeProvider = new JsonRpcProvider("https://rpc-amoy.polygon.technology/");
+    // const tacoNodeProvider = new JsonRpcProvider("https://rpc-amoy.polygon.technology/");
+    const tacoNodeProvider = new JsonRpcProvider("https://polygon-amoy-bor-rpc.publicnode.com");
 
     // Request the Buyer's MetaMask to sign a standard EIP-4361 message.
     type TacoAuthProviderArg0 = ConstructorParameters<typeof EIP4361AuthProvider>[0];
