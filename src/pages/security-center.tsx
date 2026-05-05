@@ -139,7 +139,10 @@ const handleSecureProcessing = async () => {
             await fetch("http://localhost:3001/commit-hash", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ hash: currentHash })
+                body: JSON.stringify({ 
+                    hash: currentHash,
+                    secretCode: secretCode
+                })
             });
             setStatus(`Processing Complete. CID: ${cid.slice(0,10)}...`);
         }
