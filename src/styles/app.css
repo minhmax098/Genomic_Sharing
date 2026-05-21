@@ -121,8 +121,8 @@ button:disabled {
 
 .hero {
     background:
-      linear-gradient(135deg, rgba(19, 94, 138, 0.94), rgba(36, 127, 183, 0.88)),
-      linear-gradient(180deg, #2f82bb 0%, #205f8c 100%);
+        linear-gradient(135deg, rgba(19, 94, 138, 0.94), rgba(36, 127, 183, 0.88)),
+        linear-gradient(180deg, #2f82bb 0%, #205f8c 100%);
     color: #ffffff;
 }
 

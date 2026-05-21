@@ -1,4 +1,4 @@
-[
+    [
         {
         "inputs": [
             {
@@ -729,30 +729,6 @@
         {
         "inputs": [
             {
-            "internalType": "uint256",
-            "name": "tokenId",
-            "type": "uint256"
-            },
-            {
-            "internalType": "address",
-            "name": "user",
-            "type": "address"
-            }
-        ],
-        "name": "tacoCanDecrypt",
-        "outputs": [
-            {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-        },
-        {
-        "inputs": [
-            {
             "internalType": "address",
             "name": "newOwner",
             "type": "address"
@@ -781,4 +757,4 @@
         "stateMutability": "nonpayable",
         "type": "function"
         }
-]
+    ]

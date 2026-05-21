@@ -11,6 +11,7 @@ import { connectWallet, getBrowserProvider } from "./wallet";
 type ContractAddresses = {
     GDMREGISTRY_ADDRESS: string;
     SGDNFT_ADDRESS: string;
+    RGDNFT_ADDRESS: string;
     network?: string;
 };
 
@@ -43,6 +44,10 @@ const GDMREGISTRY_ADDRESS =
 const SGDNFT_ADDRESS =
     import.meta.env.VITE_SGDNFT_ADDRESS ||
     addresses.SGDNFT_ADDRESS;
+
+const RGDNFT_ADDRESS =
+    import.meta.env.VITE_RGDNFT_ADDRESS ||
+    addresses.RGDNFT_ADDRESS;
 
 const registryAbi = getAbi(registryArtifact);
 
@@ -84,10 +89,15 @@ export async function purchaseFullAccess(tokenId: number) {
     // 1. Read info directly from Smart Contract
     const publicRecord = await registry.getPublicRecord(tokenId);
 
-    // 2. Get the EXACT price that the Contract is listing (located at position 5)
-    const exactPrice = publicRecord[5];
+    // 2. Get the exact price that the contract is listing
+    // if contract uses struct, index 5 is 'price'
+    const exactPrice = publicRecord.price || publicRecord[5];
 
-    // 3. Pay the exact amount
+    if (!exactPrice || exactPrice.toString() === "0") {
+        throw new Error("Could not determine the price for this Token ID");
+    }
+
+    // 3. Send purchase transaction
     const tx = await registry.purchaseFullAccess(tokenId, {
         value: exactPrice,
     });
@@ -116,6 +126,7 @@ export function getContractAddresses() {
     return {
         GDMREGISTRY_ADDRESS,
         SGDNFT_ADDRESS,
+        RGDNFT_ADDRESS,
     };
 }
 
@@ -156,13 +167,34 @@ export async function registerSGD(input: {
 
 // Get CID from the Blockchain (owner or bought can access)
 export async function getCID(tokenId: number) {
-    const registry = await getRegistryWriteContract();
+    const { signer, address } = await connectWallet();
+    // 1. Contract Registry to get CID and check Purchase
+    const registry = new Contract(GDMREGISTRY_ADDRESS, registryAbi, signer);
+    // 2. Contract NFT to check ownership (Fix error here)
+    const nft = new Contract(SGDNFT_ADDRESS, nftAbi, signer);
+    
     try {
+        // Check if purchased or not.
+        const purchased = await registry.hasPurchased(tokenId, address);
+        
+        if (!purchased) {
+            // Check if NFT owner or not
+            // Call nft.ownerOf instead registry.ownerOf
+            const owner = await nft.ownerOf(tokenId).catch(() => "");
+            
+            if (owner.toLowerCase() !== address.toLowerCase()) {
+                throw new Error("You do not have access to CID. Please purchase access first.");
+            }
+        }
+
+        // If valid, fetch CID
         const cid = await registry.getCID(tokenId);
         return cid;
-    }
-    catch (error) {
-        console.error("Error fetching CID from blockchain (not purchased or not entitled):", error);
+
+    } catch (error: unknown) {
+        if (error instanceof Error && error.message.includes("ownerOf")) {
+            throw new Error("Token ID does not exist or NFT contract error.");
+        }
         throw error;
     }
 }

@@ -1,4 +1,4 @@
-// buyer page
+// Buyer page
 import { useState } from "react";
 import { connectWallet, switchToSepolia } from "../lib/wallet";
 import { getPublicRecord, hasPurchased, purchaseFullAccess, getCID } from "../lib/blockchain";
@@ -93,10 +93,10 @@ export default function BuyerDemo() {
             
             // 1. Get the correct CID from Smart Contract through the getCID function
             const cid = await getCID(tokenId);
-            console.log("Mã CID lấy được từ chuỗi:", cid);
+            console.log("CID code obtained from string:", cid);
 
             if (!cid || !cid.startsWith("Qm")) {
-                setStatus("Lỗi: Không tìm thấy mã CID hợp lệ (phải bắt đầu bằng Qm)");
+                setStatus("Error: No valid CID found (must start with Qm)");
                 return;
             }
 
@@ -109,7 +109,13 @@ export default function BuyerDemo() {
             const kitText = await new Response(kitData).text();
             const kit = JSON.parse(kitText);
 
-            setCurrentKit(kit);
+            if (kit.messageKit) {
+                setCurrentKit(kit.messageKit);
+            }
+            else {
+                setCurrentKit(kit);
+            }
+            
             setMessageKitAvailable(true);
             setStatus("Encrypted payload loaded successfully from IPFS");
 

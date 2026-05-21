@@ -1,69 +1,185 @@
+// Sequencing Center page
 import { useState } from "react";
 import { connectWallet } from "../lib/wallet";
 import { getContractAddresses, registerSGD } from "../lib/blockchain";
 import { tacoEncryptPlaintext } from "../lib/tacoEncrypt";
 import { uploadEncryptedToIPFS } from "../lib/ipfs";
+import { createSafeProposal } from "../lib/safeService";
+import { ethers } from "ethers";
 
 export default function SecurityCenter() {
     const [address, setAddress] = useState("");
     const [tokenId, setTokenId] = useState(1);
+    const [plaintext, setPlaintext] = useState("");
+    const [secretCode, setSecretCode] = useState("");
     const [status, setStatus] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isFinished, setIsFinished] = useState(false);
+    const [safeAddress, setSafeAddress] = useState("");
 
     const { GDMREGISTRY_ADDRESS } = getContractAddresses();
 
     const handleConnect = async () => {
-        const { address } = await connectWallet();
-        setAddress(address);
-        setStatus("Security Center Node Connected");
+        try {
+            const { address } = await connectWallet();
+            setAddress(address);
+            setStatus("Sequencing Center Node Connected");
+        } catch (error: unknown) {
+            const errorMessage =
+                error instanceof Error ? error.message : "Failed to connect Sequencing Center node";
+            setStatus("Error: " + errorMessage);
+        }
     };
 
     const handleSecureProcessing = async () => {
         try {
             setIsProcessing(true);
+            setIsFinished(false);
+
+            if (!address) {
+                setStatus("Please connect Sequencing Center node first.");
+                setIsProcessing(false);
+                return;
+            }
+
+            const ownerPermission = localStorage.getItem("owner_permission_granted");
+
+            if (ownerPermission !== "true") {
+                setStatus("Error: Owner permission has not been granted yet.");
+                setIsProcessing(false);
+                return;
+            }
+
+            if (!plaintext.trim() || !secretCode.trim()) {
+                setStatus("Please enter both Raw Genomic Data and Secret Code.");
+                setIsProcessing(false);
+                return;
+            }
+
+            const dataToProcess = plaintext.trim();
+            const rgdIdForRef = localStorage.getItem("authorized_rgd_id") || `RGD-NFT-${tokenId}`;
+
+            setStatus("Verifying data integrity and checking duplicates...");
+
+            const verifyRes = await fetch("http://localhost:3001/verifyFile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    content: dataToProcess,
+                    format: "txt",
+                    fileName: "genomic_data.txt",
+                    secretCode: secretCode
+                })
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (!verifyRes.ok) {
+                setStatus(`Stop: ${verifyData.error}`);
+                setIsProcessing(false);
+                return;
+            }
+
+            const currentHash = verifyData.hash;
+
             setStatus("1/3: Encrypting via TACo Threshold Protocol...");
-            
-            // Lấy dữ liệu (giả định lấy từ Owner đã authorize)
-            const mockPlaintext = "Hello SGD from Owner A"; 
 
             const kit = await tacoEncryptPlaintext({
-                plaintext: mockPlaintext,
+                plaintext: dataToProcess,
                 registryAddress: GDMREGISTRY_ADDRESS,
                 tokenId,
             });
 
             setStatus("2/3: Uploading Secure Genomic Data (SGD) to IPFS...");
-            const kitBlob = new Blob([JSON.stringify(kit)], { type: "application/json" });
-            const cid = await uploadEncryptedToIPFS(kitBlob, `sgd_token_${tokenId}.taco`);
 
-            setStatus("3/3: Recording Metadata on Ethereum Blockchain...");
-            await registerSGD({
-                initialOwner: "0xAddress_Of_Owner_Here", // Địa chỉ của Owner thực sự
-                sgdId: `SGD-SEC-${tokenId}`,
-                rgdId: "RGD-PRIMARY",
-                cid: cid,
-                accessCondition: "Paid Access",
-                price: "0.01",
-                collectionDate: Math.floor(Date.now() / 1000),
-                sampleType: "Genomic Sequence",
-                patientRef: "ANON-001",
-                consentCode: "CONSENT-YES",
-                sampleHash: "0x" + "0".repeat(40),
-                encryptionScheme: "TACo-Nucypher",
-                sequencingInfo: "Trusted Sequencing Center",
-                signatureRef: "0x" + "0".repeat(40),
-                encHash: "0x" + "0".repeat(40),
-                tokenURI: `ipfs://${cid}`,
+            const kitBlob = new Blob([JSON.stringify(kit)], {
+                type: "application/json",
             });
 
-            setStatus(`Processing Complete. CID: ${cid.slice(0,10)}...`);
+            const cid = await uploadEncryptedToIPFS(
+                kitBlob,
+                `sgd_token_${tokenId}.taco`
+            );
+
+            if (safeAddress && ethers.isAddress(safeAddress)) {
+                setStatus("3/3: Creating Safe Multi-sig Proposal...");
+
+                const registryInterface = new ethers.Interface([
+                    "function registerSGD(address initialOwner, string sgdId, string rgdId, string cid, string accessCondition, string price, uint256 collectionDate, string sampleType, string patientRef, string consentCode, bytes32 sampleHash, string encryptionScheme, string sequencingInfo, bytes32 signatureRef, string tokenURI)"
+                ]);
+
+                const txData = {
+                    to: GDMREGISTRY_ADDRESS,
+                    data: registryInterface.encodeFunctionData("registerSGD", [
+                        address,
+                        `SGD-SEC-${tokenId}`,
+                        rgdIdForRef,
+                        cid,
+                        "Paid Access",
+                        "0.01",
+                        Math.floor(Date.now() / 1000),
+                        "Genomic Sequence",
+                        "ANON-001",
+                        "CONSENT-YES",
+                        currentHash,
+                        "TACo-Nucypher",
+                        "Trusted Sequencing Center",
+                        ethers.ZeroHash,
+                        `ipfs://${cid}`
+                    ]),
+                    value: "0",
+                };
+
+                const txHash = await createSafeProposal(safeAddress, txData);
+
+                setStatus(
+                    `Proposal Pending! Hash: ${txHash.slice(
+                        0,
+                        10
+                    )}... Please approve on Safe Dashboard.`
+                );
+            } else {
+                setStatus("3/3: Recording Directly on Blockchain...");
+
+                await registerSGD({
+                    initialOwner: address,
+                    sgdId: `SGD-SEC-${tokenId}`,
+                    rgdId: rgdIdForRef,
+                    cid: cid,
+                    accessCondition: "Paid Access",
+                    price: "0.01",
+                    collectionDate: Math.floor(Date.now() / 1000),
+                    sampleType: "Genomic Sequence",
+                    patientRef: "ANON-001",
+                    consentCode: "CONSENT-YES",
+                    sampleHash: currentHash,
+                    encryptionScheme: "TACo-Nucypher",
+                    sequencingInfo: "Trusted Sequencing Center",
+                    signatureRef: ethers.ZeroHash,
+                    encHash: ethers.ZeroHash,
+                    tokenURI: `ipfs://${cid}`,
+                });
+
+                await fetch("http://localhost:3001/commit-hash", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        hash: currentHash,
+                        secretCode: secretCode,
+                    }),
+                });
+
+                setStatus(`Processing Complete. CID: ${cid.slice(0, 10)}...`);
+            }
+
             setIsProcessing(false);
+            setIsFinished(true);
         } catch (error: unknown) {
-            // setStatus("Error: " + error.message);
-            // setIsProcessing(false);
-            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+            const errorMessage =
+                error instanceof Error ? error.message : "An unknown error occurred";
             setStatus("Error: " + errorMessage);
             setIsProcessing(false);
+            setIsFinished(false);
         }
     };
 
@@ -71,43 +187,115 @@ export default function SecurityCenter() {
         <div className="demo-page">
             <div className="demo-header">
                 <div>
-                    <p className="section-tag">Security Center</p>
+                    <p className="section-tag">Sequencing Center</p>
                     <h2>2. Secure Processing & Encryption</h2>
                     <p className="section-copy">
-                        The Security Center acts as a Trusted Execution Environment. 
-                        We perform heavy computation, encryption, and decentralized storage tasks.
+                        The Sequencing Center receives authorized genomic data, verifies it,
+                        performs duplicate checking, applies TACo threshold encryption,
+                        uploads the encrypted payload to IPFS, and registers SGD metadata
+                        on the blockchain.
                     </p>
                 </div>
-                <button className="primary-btn" onClick={handleConnect} style={{background: '#6366f1'}}>
-                    {address ? "Node Active" : "Connect Security Node"}
+
+                <div className="field-group" style={{ marginBottom: "20px" }}>
+                    <label className="field-label">
+                        Safe Multi-sig Address (Optional)
+                    </label>
+                    <input
+                        className="text-input"
+                        type="text"
+                        placeholder="0x... (Leave blank for direct register)"
+                        value={safeAddress}
+                        onChange={(e) => setSafeAddress(e.target.value)}
+                    />
+                </div>
+
+                <button className="primary-btn" onClick={handleConnect}>
+                    {address ? "Node Active" : "Connect Sequencing Center Node"}
                 </button>
             </div>
 
             <div className="demo-grid">
                 <section className="card">
                     <div className="field-group">
+                        <label className="field-label">
+                            Raw Genomic Data (Plaintext)
+                        </label>
+                        <textarea
+                            className="text-area"
+                            rows={8}
+                            value={plaintext}
+                            onChange={(e) => {
+                                setPlaintext(e.target.value);
+                                setIsFinished(false);
+                            }}
+                            placeholder="Enter genomic sequence here..."
+                        />
+
+                        <label className="field-label">
+                            Secret Code / Authorization Code
+                        </label>
+                        <input
+                            className="text-input"
+                            type="password"
+                            value={secretCode}
+                            onChange={(e) => {
+                                setSecretCode(e.target.value);
+                                setIsFinished(false);
+                            }}
+                            placeholder="Enter owner authorization code..."
+                        />
+
                         <label className="field-label">Target Token ID</label>
-                        <input className="text-input" type="number" value={tokenId} onChange={e => setTokenId(Number(e.target.value))} />
+                        <input
+                            className="text-input"
+                            type="number"
+                            value={tokenId}
+                            onChange={(e) => {
+                                setTokenId(Number(e.target.value));
+                                setIsFinished(false);
+                            }}
+                        />
                     </div>
-                    <button 
-                        className="primary-btn" 
+
+                    <button
+                        className="primary-btn"
                         onClick={handleSecureProcessing}
-                        disabled={isProcessing || !address}
-                        style={{width: '100%', background: isProcessing ? '#94a3b8' : '#6366f1'}}
+                        disabled={isProcessing || !address || isFinished}
+                        style={{
+                            width: "100%",
+                            background:
+                                isProcessing || isFinished ? "#456347" : "#13a538",
+                            cursor:
+                                isProcessing || isFinished
+                                    ? "not-allowed"
+                                    : "pointer",
+                        }}
                     >
-                        {isProcessing ? "Processing..." : "Start Secure Encryption Flow"}
+                        {isProcessing
+                            ? "Processing..."
+                            : isFinished
+                            ? "Data Registered Successfully"
+                            : "Start Secure Encryption Flow"}
                     </button>
-                    <div className="status-box" style={{marginTop: '20px'}}>
-                        <strong>{status || "Ready to process authorized data..."}</strong>
+
+                    <div className="status-box" style={{ marginTop: "20px" }}>
+                        <span>Current status</span>
+                        <strong>
+                            {status || "Ready to process authorized data..."}
+                        </strong>
                     </div>
                 </section>
-                
+
                 <aside className="card">
                     <h3>Technical Duty</h3>
                     <ul className="flow-list">
-                        <li>Perform Threshold Encryption (TACo).</li>
-                        <li>Manage decentralized storage (IPFS).</li>
-                        <li>Interface with Smart Contracts for registration.</li>
+                        <li>Receive Raw Genomic Data under Owner authorization.</li>
+                        <li>Verify Secret Code and genomic data validity.</li>
+                        <li>Check duplicate or garbage genomic submissions.</li>
+                        <li>Perform Threshold Encryption using TACo.</li>
+                        <li>Upload encrypted Secure Genomic Data to IPFS.</li>
+                        <li>Register SGD metadata through Smart Contracts.</li>
                     </ul>
                 </aside>
             </div>
