@@ -105,27 +105,30 @@ export default function SecurityCenter() {
                 setStatus("3/3: Creating Safe Multi-sig Proposal...");
 
                 const registryInterface = new ethers.Interface([
-                    "function registerSGD(address initialOwner, string sgdId, string rgdId, string cid, string accessCondition, string price, uint256 collectionDate, string sampleType, string patientRef, string consentCode, bytes32 sampleHash, string encryptionScheme, string sequencingInfo, bytes32 signatureRef, string tokenURI)"
+                    "function registerSGD(tuple(address initialOwner, string sgdId, string rgdId, string cid, string accessCondition, uint256 price, uint256 collectionDate, string sampleType, string patientRef, string consentCode, string sampleHash, string encryptionScheme, string sequencingInfo, string signatureRef, string encHash, string tokenURI) input)"
                 ]);
 
                 const txData = {
                     to: GDMREGISTRY_ADDRESS,
                     data: registryInterface.encodeFunctionData("registerSGD", [
-                        address,
-                        `SGD-SEC-${tokenId}`,
-                        rgdIdForRef,
-                        cid,
-                        "Paid Access",
-                        "0.01",
-                        Math.floor(Date.now() / 1000),
-                        "Genomic Sequence",
-                        "ANON-001",
-                        "CONSENT-YES",
-                        currentHash,
-                        "TACo-Nucypher",
-                        "Trusted Sequencing Center",
-                        ethers.ZeroHash,
-                        `ipfs://${cid}`
+                        {
+                            initialOwner: address,
+                            sgdId: `SGD-SEC-${tokenId}`,
+                            rgdId: rgdIdForRef,
+                            cid: cid,
+                            accessCondition: "Paid Access",
+                            price: ethers.parseEther("0.01"),
+                            collectionDate: Math.floor(Date.now() / 1000),
+                            sampleType: "Genomic Sequence",
+                            patientRef: "ANON-001",
+                            consentCode: "CONSENT-YES",
+                            sampleHash: currentHash,
+                            encryptionScheme: "TACo-Nucypher",
+                            sequencingInfo: "Trusted Sequencing Center",
+                            signatureRef: ethers.ZeroHash,
+                            encHash: ethers.ZeroHash,
+                            tokenURI: `ipfs://${cid}`
+                        }
                     ]),
                     value: "0",
                 };
