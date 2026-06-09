@@ -161,6 +161,37 @@
         {
           "indexed": true,
           "internalType": "address",
+          "name": "operator",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "RGDReceived",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
           "name": "newRegistrar",
           "type": "address"
         }
@@ -299,6 +330,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "feeReceiver",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -340,9 +384,9 @@
               "type": "string"
             },
             {
-              "internalType": "string",
-              "name": "rgdId",
-              "type": "string"
+              "internalType": "uint256",
+              "name": "rgdTokenId",
+              "type": "uint256"
             },
             {
               "internalType": "string",
@@ -456,9 +500,9 @@
               "type": "string"
             },
             {
-              "internalType": "string",
-              "name": "rgdId",
-              "type": "string"
+              "internalType": "uint256",
+              "name": "rgdTokenId",
+              "type": "uint256"
             },
             {
               "internalType": "address",
@@ -547,9 +591,9 @@
               "type": "string"
             },
             {
-              "internalType": "string",
-              "name": "rgdId",
-              "type": "string"
+              "internalType": "uint256",
+              "name": "rgdTokenId",
+              "type": "uint256"
             },
             {
               "internalType": "string",
@@ -716,6 +760,40 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "operator",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "onERC721Received",
+      "outputs": [
+        {
+          "internalType": "bytes4",
+          "name": "",
+          "type": "bytes4"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "owner",
       "outputs": [
@@ -723,6 +801,19 @@
           "internalType": "address",
           "name": "",
           "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "platformFeePercentage",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -756,9 +847,9 @@
               "type": "string"
             },
             {
-              "internalType": "string",
-              "name": "rgdId",
-              "type": "string"
+              "internalType": "uint256",
+              "name": "rgdTokenId",
+              "type": "uint256"
             },
             {
               "internalType": "string",
@@ -858,6 +949,43 @@
     {
       "inputs": [],
       "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "rgdOriginalOwners",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "newFeePercentage",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "newFeeReceiver",
+          "type": "address"
+        }
+      ],
+      "name": "setFeeConfiguration",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
