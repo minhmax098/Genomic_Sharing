@@ -82,7 +82,7 @@ export default function SecurityCenter() {
 
             const currentHash = verifyData.hash;
 
-            // ==================== LUỒNG XỬ LÝ IPFS ĐỒNG BỘ CID THẬT TỪ PINATA ====================
+            // ==================== LUỒNG XỬ LÝ IPFS ĐỒNG BỘ CID THẬT 100% ====================
             setStatus("1/3: Encrypting via TACo Threshold Protocol...");
 
             let cid = "";
@@ -101,15 +101,15 @@ export default function SecurityCenter() {
                     type: "application/json",
                 });
 
-                // Lấy chuỗi CID thật trả về từ tài khoản Pinata sau khi upload file mã hóa tiêu chuẩn
+                // Truyền trực tiếp Blob nguyên bản sang cho file ipfs.ts xử lý bọc tệp tin
                 cid = await uploadEncryptedToIPFS(kitBlob, `sgd_token_${tokenId}.taco`);
-                console.log("👉 Đã upload gói tin TACo lên Pinata thật. CID trả về:", cid);
+                console.log("👉 Đã upload gói tin TACo thật lên Pinata. CID:", cid);
 
             } catch (tacoError) {
                 console.warn("⚠️ [TACo SDK Warning]: Tự động chuyển sang chế độ đóng gói cấu trúc dữ liệu dự phòng:", tacoError);
                 setStatus("2/3: Structuring Secure Payload & Uploading to IPFS...");
 
-                // Tạo một gói cấu trúc mã hóa giả lập đúng định dạng hex dữ liệu gen
+                // Tạo gói cấu trúc mã hóa giả lập đúng định dạng hex dữ liệu gen phục vụ khâu bóc tách giải mã ở tab Buyer
                 const mockKit = { 
                     messageKit: "0x" + "a1b2c3d4e5f67890".repeat(25) 
                 };
@@ -119,13 +119,15 @@ export default function SecurityCenter() {
                 });
 
                 try {
-                    // Vẫn đẩy tệp tin này lên tài khoản Pinata của bạn để lấy CID thật 100% ghi nhận on-chain
+                    // 🚀 ĐỒNG BỘ: Vẫn đẩy gói dữ liệu cấu trúc này lên cổng Pinata thật để lấy CID thật 100%
                     cid = await uploadEncryptedToIPFS(kitBlob, `sgd_token_${tokenId}.taco`);
-                    console.log("👉 Đã upload file cấu trúc lên Pinata thật. CID trả về:", cid);
+                    console.log("👉 Đã upload gói tin cấu trúc lên Pinata thật. CID thực tế trả về:", cid);
                 } catch (ipfsErr) {
-                    // Chỉ khi nào mạng lỗi / Pinata sập: Sử dụng CID dự phòng để cứu buổi demo không bị đứng hình
-                    console.error("❌ Lỗi kết nối API Pinata, áp dụng CID dự phòng:", ipfsErr);
-                    cid = "QmZtmvMiw7XUepZJ17XUepZJz6bY7rXUePmockCID1234";
+                    // Nếu lỗi kết nối API thật, dừng tiến trình và hiển thị thông báo lỗi rõ ràng lên màn hình UI
+                    console.error("❌ Lỗi kết nối API Pinata thật:", ipfsErr);
+                    setStatus("Error: Cannot upload payload to Pinata. Check your JWT token configuration.");
+                    setIsProcessing(false);
+                    return; 
                 }
             }
 
@@ -145,7 +147,7 @@ export default function SecurityCenter() {
                         rgdIdForRef,
                         cid,
                         "Paid Access",
-                        "10000000000000000", // Đồng bộ cấu trúc dữ liệu wei của contract (0.01 ETH)
+                        "10000000000000000", 
                         Math.floor(Date.now() / 1000),
                         "Genomic Sequence",
                         "ANON-001",
@@ -164,11 +166,11 @@ export default function SecurityCenter() {
             } else {
                 setStatus("3/3: Recording Directly on Blockchain...");
 
-                // Gửi giao dịch thật tương tác với Smart Contract mới deploy để đăng ký Metadata bộ gen (chứa CID thật)
+                // Gửi giao dịch thật tương tác với Smart Contract mới deploy (chứa CID thật vừa tạo ở bước trên)
                 await registerSGD({
                     initialOwner: address,
                     sgdId: `SGD-SEC-${tokenId}`,
-                    rgdTokenId: tokenId, // 🛠️ ĐỔI TÊN TRƯỜNG TỪ 'rgdId' THÀNH 'rgdTokenId' VÀ TRUYỀN KIỂU SỐ (number)
+                    rgdTokenId: tokenId, 
                     cid: cid,
                     accessCondition: "Paid Access",
                     price: "10000000000000000", 
@@ -194,7 +196,7 @@ export default function SecurityCenter() {
                     }),
                 });
 
-                setStatus(`Processing Complete. CID: ${cid.slice(0, 10)}...`);
+                setStatus(`Processing Complete. CID: ${cid.slice(0, 15)}...`);
             }
 
             setIsProcessing(false);
@@ -245,7 +247,7 @@ export default function SecurityCenter() {
                 <section className="card">
                     <div className="field-group">
                         <label className="field-label">
-                            Raw Genomic Data (Plaintext)
+                            Raw Genomic Data
                         </label>
                         <textarea
                             className="text-area"
