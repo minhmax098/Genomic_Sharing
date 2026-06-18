@@ -74,7 +74,12 @@ export async function tacoEncryptPlaintext(params: {
     // create a secure block called MessageKit.
     const accessCondition = buildBuyerAccessCondition(tokenId, registryAddress);
     const plaintextBytes = encoder.encode(plaintext);
-    const signer = web3Provider.getSigner() as unknown as TacoEncryptSigner;
+    // const signer = web3Provider.getSigner() as unknown as TacoEncryptSigner;
+    const baseSigner = web3Provider.getSigner();
+    const signer = {
+        getAddress: () => baseSigner.getAddress(),
+        signMessage: (message: string | Uint8Array) => baseSigner.signMessage(message)
+    } as unknown as TacoEncryptSigner;
 
     const messageKit = await encrypt(
         tacoNodeProvider as unknown as TacoEncryptProvider,
