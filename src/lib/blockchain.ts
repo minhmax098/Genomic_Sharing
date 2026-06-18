@@ -134,7 +134,7 @@ export function getContractAddresses() {
 export async function registerSGD(input: {
     initialOwner: string;
     sgdId: string;
-    rgdId: string;
+    rgdTokenId: number;
     cid: string;    // CID is passed here from IPFS 
     accessCondition: string;
     price: string;  // ETH -> Wei
