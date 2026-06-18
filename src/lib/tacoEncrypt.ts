@@ -51,11 +51,12 @@ export async function tacoEncryptPlaintext(params: {
     }): Promise<{ messageKit: string }> { 
     
     const { plaintext, registryAddress, tokenId } = params;
-    const ritualId = Number(params.ritualId ?? import.meta.env.VITE_TACO_RITUAL_ID ?? "0");
+    
+    // 🛠️ ĐÃ CẬP NHẬT: Thêm phương án dự phòng mặc định là 1 nếu VITE_TACO_RITUAL_ID bị trống/undefined
+    const envRitualId = import.meta.env.VITE_TACO_RITUAL_ID;
+    const ritualId = Number(params.ritualId ?? (envRitualId && envRitualId !== "0" ? envRitualId : "1"));
 
-    if (!ritualId) {
-        throw new Error("Missing VITE_TACO_RITUAL_ID");
-    }
+    console.log("👉 [TACo Flow] Active Ritual ID used for encryption:", ritualId);
 
     if (!window.ethereum) {
         throw new Error("MetaMask is not installed");
