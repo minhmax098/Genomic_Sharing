@@ -1,5 +1,4 @@
 // Owner page
-// Owner page
 import { useState } from "react";
 import { connectWallet, switchToSepolia } from "../lib/wallet";
 

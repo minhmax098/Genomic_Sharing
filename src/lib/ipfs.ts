@@ -5,19 +5,19 @@ const JWT = import.meta.env.VITE_PINATA_JWT;
 
 // Upload encrypted data to IPFS (Pinata)
 export const uploadEncryptedToIPFS = async (data: Blob | File, fileName: string) => {
-    console.log("Kiểm tra Token JWT hiện tại trong code:", JWT ? "Đã nhận (OK)" : "Bị UNDEFINED (Lỗi rồi!)");
+    console.log("Check the current JWT token in the code.:", JWT ? "Received (OK)" : "UNDEFINED (Error!)");
     if (!JWT) {
-        throw new Error("LỖI CẤU HÌNH: Ứng dụng chưa đọc được VITE_PINATA_JWT từ file .env. Hãy khởi động lại server dev!");
+        throw new Error("CONFIGURATION ERROR: Application failed to read VITE_PINATA_JWT from .env file. Please restart the dev server!");
     }
     
     const formData = new FormData();
     
-    // Chuẩn hóa: Biến đổi Blob thành File object có định dạng JSON rõ ràng
+    // Transform a Blob into a file object with clear JSON format
     const fileToUpload = data instanceof File 
         ? data 
         : new File([data], fileName, { type: "application/json" });
         
-    // 🛠️ ĐỒNG BỘ: Bắt buộc truyền fileName vào tham số thứ 3 để Axios giữ nguyên filename header gửi lên Pinata
+    // SYNCHRONIZATION: pass fileName as the third parameter so that Axios retains the filename header sent to Pinata.
     formData.append('file', fileToUpload, fileName);
 
     const metadata = JSON.stringify({
@@ -26,14 +26,14 @@ export const uploadEncryptedToIPFS = async (data: Blob | File, fileName: string)
     formData.append('pinataMetadata', metadata);
 
     try {
-        // Gọi lên endpoint chính thức của Pinata
+        // Call the official Pinata endpoint.
         const res = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', formData, {
             headers: {
                 'Authorization': `Bearer ${JWT}`,
                 'Content-Type': 'multipart/form-data',
             }
         });
-        // Trả về chuỗi CID thật (Qm...) từ Pinata Cloud
+        // Returns the actual CID string (Qm...) from Pinata Cloud
         return res.data.IpfsHash; 
     } catch (error) {
         console.error('Error uploading to IPFS:', error);

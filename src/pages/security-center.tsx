@@ -82,13 +82,13 @@ export default function SecurityCenter() {
 
             const currentHash = verifyData.hash;
 
-            // ==================== LUỒNG XỬ LÝ IPFS ĐỒNG BỘ CID THẬT 100% ====================
+            // IPFS PROCESSING FLOW WITH CID SYNCHRONOUS
             setStatus("1/3: Encrypting via TACo Threshold Protocol...");
 
             let cid = "";
 
             try {
-                // Luồng chạy tiêu chuẩn: Cố gắng mã hóa qua SDK TACo
+                // Standard execution flow: Attempting to code via the TACo SDK
                 const kit = await tacoEncryptPlaintext({
                     plaintext: dataToProcess,
                     registryAddress: GDMREGISTRY_ADDRESS,
@@ -101,7 +101,7 @@ export default function SecurityCenter() {
                     type: "application/json",
                 });
 
-                // Truyền trực tiếp Blob nguyên bản sang cho file ipfs.ts xử lý bọc tệp tin
+                // Directly pass the original Blob to the ipfs.ts file for file wrapping processing.
                 cid = await uploadEncryptedToIPFS(kitBlob, `sgd_token_${tokenId}.taco`);
                 console.log("👉 Đã upload gói tin TACo thật lên Pinata. CID:", cid);
 
@@ -109,7 +109,8 @@ export default function SecurityCenter() {
                 console.warn("⚠️ [TACo SDK Warning]: Tự động chuyển sang chế độ đóng gói cấu trúc dữ liệu dự phòng:", tacoError);
                 setStatus("2/3: Structuring Secure Payload & Uploading to IPFS...");
 
-                // Tạo gói cấu trúc mã hóa giả lập đúng định dạng hex dữ liệu gen phục vụ khâu bóc tách giải mã ở tab Buyer
+                // Create a simulated encoding package in the correct hex format for the genetic data 
+                // to be used in the extraction and decoding process in the Buyer tab
                 const mockKit = { 
                     messageKit: "0x" + "a1b2c3d4e5f67890".repeat(25) 
                 };
@@ -119,19 +120,19 @@ export default function SecurityCenter() {
                 });
 
                 try {
-                    // 🚀 ĐỒNG BỘ: Vẫn đẩy gói dữ liệu cấu trúc này lên cổng Pinata thật để lấy CID thật 100%
+                    // We still push this structured data packet to the real Pinata port to get the CID
                     cid = await uploadEncryptedToIPFS(kitBlob, `sgd_token_${tokenId}.taco`);
-                    console.log("👉 Đã upload gói tin cấu trúc lên Pinata thật. CID thực tế trả về:", cid);
+                    console.log("The structured packet has been uploaded to Pinata. The actual CID returned:", cid);
                 } catch (ipfsErr) {
-                    // Nếu lỗi kết nối API thật, dừng tiến trình và hiển thị thông báo lỗi rõ ràng lên màn hình UI
-                    console.error("❌ Lỗi kết nối API Pinata thật:", ipfsErr);
+                    // If a API connection error occurs, stop the process and display a clear error message on the UI
+                    console.error("Pinata API connection error:", ipfsErr);
                     setStatus("Error: Cannot upload payload to Pinata. Check your JWT token configuration.");
                     setIsProcessing(false);
                     return; 
                 }
             }
 
-            // --- BƯỚC 3: GHI NHẬN METADATA LÊN BLOCKCHAIN SEPOLIA ---
+            // Step 3: RECORD METADATA ON THE SEPOLIA BLOCKCHAIN
             if (safeAddress && ethers.isAddress(safeAddress)) {
                 setStatus("3/3: Creating Safe Multi-sig Proposal...");
 
@@ -166,7 +167,7 @@ export default function SecurityCenter() {
             } else {
                 setStatus("3/3: Recording Directly on Blockchain...");
 
-                // Gửi giao dịch thật tương tác với Smart Contract mới deploy (chứa CID thật vừa tạo ở bước trên)
+                // Send real, interactive transactions with the newly deployed Smart Contract
                 await registerSGD({
                     initialOwner: address,
                     sgdId: `SGD-SEC-${tokenId}`,
@@ -186,7 +187,8 @@ export default function SecurityCenter() {
                     tokenURI: `ipfs://${cid}`,
                 });
 
-                // Gửi yêu cầu cập nhật trạng thái used: true về cho backend lưu trữ file JSON
+                // Send a request to update the status of the hash to used: 
+                // true for backend storage of the JSON file
                 await fetch("http://localhost:3001/commit-hash", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

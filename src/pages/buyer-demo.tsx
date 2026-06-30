@@ -39,17 +39,6 @@ export default function BuyerDemo() {
         }
     };
 
-    // const handleGetRecord = async () => {
-    //     try {
-    //         setStatus("Loading public record...");
-    //         const data = await getPublicRecord(tokenId);
-    //         setRecord(data as Record<string, unknown>);
-    //         setStatus("Public record loaded");
-    //     } catch (error: unknown) {
-    //         setStatus(getErrorMessage(error, "Failed to load public record"));
-    //     }
-    // };
-
     const handleGetRecord = async () => {
         try {
             setStatus("Loading public record...");
@@ -59,7 +48,7 @@ export default function BuyerDemo() {
         } catch (error: unknown) {
             console.warn("⚠️ Phát hiện mã lỗi 0x3e07f1a1 (RecordNotFound), kích hoạt Fallback mode cho Demo:", error);
             
-            // Tự động nạp cấu trúc mock record để giao diện hiển thị mượt mà
+            // record structure to UI display
             setRecord({
                 tokenId: tokenId,
                 sgdId: `SGD-SEC-${tokenId}`,
@@ -87,54 +76,6 @@ export default function BuyerDemo() {
         }
     };
 
-    // const handlePurchase = async () => {
-    //     try {
-    //         if (!address) {
-    //             setStatus("Connect buyer wallet first");
-    //             return;
-    //         }
-    //         if (purchased === "true") {
-    //             setStatus("Buyer already purchased access");
-    //             return;
-    //         }
-    //         setStatus("Sending purchase transaction...");
-    //         const hash = await purchaseFullAccess(tokenId);
-    //         setTxHash(hash);
-    //         setStatus("Purchase successful");
-
-    //         const result = await hasPurchased(tokenId, address);
-    //         setPurchased(String(result));
-    //     } catch (error: unknown) {
-    //         setStatus(getErrorMessage(error, "Purchase failed"));
-    //     }
-    // };
-
-    // const handlePurchase = async () => {
-    //     try {
-    //         if (!address) {
-    //             setStatus("Connect buyer wallet first");
-    //             return;
-    //         }
-    //         if (purchased === "true") {
-    //             setStatus("Buyer already purchased access");
-    //             return;
-    //         }
-
-    //         setStatus("Switching to Sepolia Network...");
-    //         await switchToSepolia();
-
-    //         setStatus("Sending purchase transaction...");
-    //         const hash = await purchaseFullAccess(tokenId);
-    //         setTxHash(hash);
-    //         setStatus("Purchase successful");
-
-    //         const result = await hasPurchased(tokenId, address);
-    //         setPurchased(String(result));
-    //     } catch (error: unknown) {
-    //         setStatus(getErrorMessage(error, "Purchase failed"));
-    //     }
-    // };
-
     const handlePurchase = async () => {
         try {
             if (!address) {
@@ -151,16 +92,16 @@ export default function BuyerDemo() {
 
             setStatus("Sending purchase transaction...");
             try {
-                // Thử gọi lệnh mua on-chain
+                // Try call buy on-chain
                 const hash = await purchaseFullAccess(tokenId);
                 setTxHash(hash);
             } catch (contractErr) {
-                // Nếu contract từ chối do RecordNotFound, tự tạo một hash giả lập để luồng không bị ngắt
-                console.warn("⚠️ Bypass lỗi revert on-chain phục vụ thuyết trình:", contractErr);
+                // If contract is rejected due to RecordNotFound, create a mock hash yourself so the flow isn't interrupted.
+                console.warn("Bypass revert on-chain vulnerabilities for presentations:", contractErr);
                 setTxHash("0x" + "9a8b7c".repeat(10) + "...");
             }
 
-            // Ép trạng thái purchased sang true để người dùng có thể load data từ IPFS
+            // Force the purchased status to true so that the user can load data from IPFS
             setPurchased("true");
             setStatus("Purchase successful");
         } catch (error: unknown) {
@@ -168,71 +109,33 @@ export default function BuyerDemo() {
         }
     };
 
-    // const handleLoadMessageKit = async () => {
-    //     try {
-    //         setStatus("Fetching CID from blockchain...");
-            
-    //         // 1. Get the correct CID from Smart Contract through the getCID function
-    //         const cid = await getCID(tokenId);
-    //         console.log("CID code obtained from string:", cid);
-
-    //         if (!cid || !cid.startsWith("Qm")) {
-    //             setStatus("Error: No valid CID found (must start with Qm)");
-    //             return;
-    //         }
-
-    //         setStatus("Fetching encrypted payload from IPFS...");
-            
-    //         // 2. Download Blob data from IPFS Gateway
-    //         const kitData = await fetchFromIPFS(cid);
-
-    //         // 3. Convert Blob into text string and parse as JSON Object
-    //         const kitText = await new Response(kitData).text();
-    //         const kit = JSON.parse(kitText);
-
-    //         if (kit.messageKit) {
-    //             setCurrentKit(kit.messageKit);
-    //         }
-    //         else {
-    //             setCurrentKit(kit);
-    //         }
-            
-    //         setMessageKitAvailable(true);
-    //         setStatus("Encrypted payload loaded successfully from IPFS");
-
-    //     } catch (error: unknown) {
-    //         console.error("Load IPFS Error:", error);
-    //         setMessageKitAvailable(false);
-    //         setStatus(getErrorMessage(error, "Failed to load from IPFS"));
-    //     }
-    // };
     const handleLoadMessageKit = async () => {
         try {
             setStatus("Fetching CID...");
             
             let cid = "";
             try {
-                // 1. Cố gắng lấy CID từ Smart Contract trước
+                // 1. Get the CID from the Smart Contract first.
                 cid = await getCID(tokenId);
             } catch (contractErr) {
-                console.warn("⚠️ Không lấy được CID từ Contract, sử dụng CID cấu trúc thực tế từ Pinata:", contractErr);
+                console.warn("Không lấy được CID từ Contract, sử dụng CID cấu trúc thực tế từ Pinata:", contractErr);
             }
 
-            // 2. NẾU CONTRACT CHƯA LƯU (Hoặc CID lỗi), ĐIỀN TRỰC TIẾP CID THẬT CỦA BẠN VÀO ĐÂY ĐỂ ĐẢM BẢO KHÔNG BỊ RỖNG
+            // 2. If the CID is empty or invalid, use a real CID
             if (!cid || !cid.startsWith("Qm")) {
-                // Thay bằng mã CID thực tế đã tạo thành công ở trang Security Center của bạn
+                // Replace CID
                 cid = "QmdgEZfcWSNnpJSdzPPnHXEECAMP8rnwpLkNQ2GZWwmaJy"; 
-                console.log("👉 Đang sử dụng CID cấu trúc thực tế để Demo luồng giải mã giải mã:", cid);
+                console.log("Đang sử dụng CID cấu trúc thực tế để Demo luồng giải mã giải mã:", cid);
             }
 
             console.log("CID code obtained:", cid);
 
             setStatus("Fetching encrypted payload from IPFS...");
             
-            // 3. Download Blob data từ IPFS Gateway với CID chuẩn
+            // 3. Download Blob data from IPFS Gateway with standard CID
             const kitData = await fetchFromIPFS(cid);
 
-            // 4. Convert Blob thành text string và parse làm JSON Object
+            // 4. Convert Blob to text string and parse into JSON Object
             const kitText = await new Response(kitData).text();
             const kit = JSON.parse(kitText);
 
