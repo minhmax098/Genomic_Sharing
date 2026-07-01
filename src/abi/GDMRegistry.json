@@ -298,22 +298,11 @@
           "internalType": "uint256",
           "name": "tokenId",
           "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "buyer",
-          "type": "address"
         }
       ],
-      "name": "canReleaseKey",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
+      "name": "activateSGD",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -322,6 +311,11 @@
           "internalType": "uint256",
           "name": "tokenId",
           "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "newWalletForActivation",
+          "type": "address"
         }
       ],
       "name": "deactivateSGD",
@@ -472,6 +466,30 @@
           "internalType": "struct GDMRegistry.SGDRecord",
           "name": "",
           "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "rgdTokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "sequencingInfo",
+          "type": "string"
+        }
+      ],
+      "name": "getPipelineStatus",
+      "outputs": [
+        {
+          "internalType": "enum GDMRegistry.PipelineStatus",
+          "name": "",
+          "type": "uint8"
         }
       ],
       "stateMutability": "view",
@@ -717,6 +735,25 @@
         }
       ],
       "name": "isLatestVersion",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "sgdId",
+          "type": "string"
+        }
+      ],
+      "name": "isSGDPurchasable",
       "outputs": [
         {
           "internalType": "bool",
@@ -1025,16 +1062,16 @@
         },
         {
           "internalType": "address",
-          "name": "user",
+          "name": "buyer",
           "type": "address"
         }
       ],
       "name": "tacoCanDecrypt",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint8",
           "name": "",
-          "type": "uint256"
+          "type": "uint8"
         }
       ],
       "stateMutability": "view",
