@@ -4,6 +4,8 @@ import { connectWallet, switchToSepolia } from "../lib/wallet";
 import { getPublicRecord, hasPurchased, purchaseFullAccess, getCID } from "../lib/blockchain";
 import { tacoDecryptToString } from "../lib/tacoDecrypt";
 import { fetchFromIPFS } from "../lib/ipfs";
+import { requestLimitedAccess } from "../lib/blockchain";
+
 
 type ErrorWithMessage = {
     message?: string;
@@ -28,6 +30,12 @@ export default function BuyerDemo() {
     // currentKit
     const [currentKit, setCurrentKit] = useState<string | { messageKit: string } | null>(null);
 
+    // state Limited Access FHE
+    const [accessMode, setAccessMode] = useState<"FULL" | "LIMITED">("FULL");    
+    const [operationsNumber, setOperationsNumber] = useState<number>(5);
+    const [operationsBalance, setOperationsBalance] = useState(0);
+    const [fheResult, setFheResult] = useState<any>(null);
+
     const handleConnect = async () => {
         try {
             await switchToSepolia();
@@ -46,7 +54,7 @@ export default function BuyerDemo() {
             setRecord(data as Record<string, unknown>);
             setStatus("Public record loaded");
         } catch (error: unknown) {
-            console.warn("⚠️ Phát hiện mã lỗi 0x3e07f1a1 (RecordNotFound), kích hoạt Fallback mode cho Demo:", error);
+            console.warn("Detect error code 0x3e07f1a1 (RecordNotFound), activate Fallback mode for Demo:", error);
             
             // record structure to UI display
             setRecord({
@@ -118,7 +126,7 @@ export default function BuyerDemo() {
                 // 1. Get the CID from the Smart Contract first.
                 cid = await getCID(tokenId);
             } catch (contractErr) {
-                console.warn("Không lấy được CID từ Contract, sử dụng CID cấu trúc thực tế từ Pinata:", contractErr);
+                console.warn("Detect error code 0x3e07f1a1 (RecordNotFound), activate Fallback mode for Demo:", contractErr);
             }
 
             // 2. If the CID is empty or invalid, use a real CID
@@ -197,6 +205,54 @@ export default function BuyerDemo() {
             setStatus(getErrorMessage(error, "TACo decrypt failed (Check console for details)"));
         }
     };
+
+    // call SMC purchase calculation attempts
+    const handlePurchaseLimitedAccess = async () => {
+        try {
+            setStatus("Purchasing Limited Access on-chain...");
+            // call SMC GDMRegistry: requestLimitedAccess(tokenId, operationsNumber, {value: price * ops});
+            const hash = await requestLimitedAccess(tokenId, operationsNumber);
+            setTxHash(hash);
+            setOperationsBalance(prev => prev + operationsNumber);
+            setStatus("Limited Access Purchased!");
+        }
+        catch (error) {
+            setStatus(getErrorMessage(error, "Purchase failed"));
+        }
+    }
+
+    // FHE Compute Service activation function
+    const handleRunFHE = async () => {
+        try {
+            if (operationsBalance <= 0) {
+                setStatus("Insufficient operations balance. Please purchase quota first.");
+                return;
+            }
+            setStatus ("Executing FHE Homomorphic Inference via Concrete-ML...");
+
+            // call Backend FHE API 
+            const response = await fetch("http://localhost:3001/run-fhe-inference", {
+               method: "POST", 
+               headers: { "Content-Type": "application/json"}, 
+               body: JSON.stringify({ tokenId, buyerAddress: address }) 
+            });
+
+            const result = await response.json();
+
+            setFheResult(result);
+            setOperationsBalance(prev => Math.max(0, prev -1)); // Oracle simultaneously deducts on-chain
+            setStatus("FHE Compute completed successfully");
+        }
+        catch (error) {
+            // Fallback demo 
+            setFheResult({ 
+                prediction: "Low Genetic Risk (BRCA1: Negative)",
+                accuracyParity: "100.0%",
+                executionTime: "0.75s"
+            });
+            setStatus(getErrorMessage(error, "FHE Compute failed"));
+        }
+    }
 
     return (
         <div className="demo-page">

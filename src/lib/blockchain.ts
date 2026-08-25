@@ -2,6 +2,7 @@
 // Buyer: call getPublicRecord(): watch price and see general info 
 // Buyer: call purchaseFullAccess(): pay to buy access
 // Buyer: call getCID(): get CID after purchase, then fetch from IPFS and decrypt
+// Buyer: call requestLimitedAccess(): pay to purchase FHE computation operations quota
 import { Contract, type InterfaceAbi } from "ethers";
 import registryArtifact from "../abi/GDMRegistry.json";
 import nftArtifact from "../abi/SGDNFT.json";
@@ -197,4 +198,30 @@ export async function getCID(tokenId: number) {
         }
         throw error;
     }
+}
+
+// Buyer: call requestLimitedAccess(): pay to purchase FHE computation operations quota
+export async function requestLimitedAccess(tokenId: number, operationsNumber: number) {
+    const registry = await getRegistryWriteContract();
+
+    // 1. Read the listing information from the Smart Contract.
+    const publicRecord = await registry.getPublicRecord(tokenId);
+
+    // 2. Get the unit price for each calculation.
+    const basePrice = publicRecord.price || publicRecord[5];
+
+    if (!basePrice || basePrice.toString() === "0") {
+        throw new Error("Could not determine the operation price for this Token ID");
+    }
+
+    // 3. Calculate the total cost = basePrice * operationsNumber
+    const totalCost = BigInt(basePrice.toString()) * BigInt(operationsNumber);
+
+    // 4. Send the payment transaction to purchase FHE computation operations quota
+    const tx = await registry.requestLimitedAccess(tokenId, operationsNumber, {
+        value: totalCost,
+    });
+
+    await tx.wait();
+    return tx.hash;
 }
