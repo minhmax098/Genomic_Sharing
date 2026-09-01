@@ -6,7 +6,8 @@ import {
     hasPurchased, 
     purchaseFullAccess, 
     getCID, 
-    requestLimitedAccess 
+    requestLimitedAccess,
+    getOperationsBalance
 } from "../lib/blockchain";
 import { tacoDecryptToString } from "../lib/tacoDecrypt";
 import { fetchFromIPFS } from "../lib/ipfs";
@@ -55,7 +56,15 @@ export default function BuyerDemo() {
             setStatus("Loading public record...");
             const data = await getPublicRecord(tokenId);
             setRecord(data as Record<string, unknown>);
+            
+            // Synchronize the actual FHE balance from on-chain to UI
+            if (address) {
+                const balance = await getOperationsBalance(tokenId, address);
+                setOperationsBalance(balance);
+            }
+
             setStatus("Public record loaded");
+            
         } catch (error: unknown) {
             console.warn("Detect error code 0x3e07f1a1 (RecordNotFound), activate Fallback mode for Demo:", error);
             

@@ -46,6 +46,16 @@ export default function OwnerDemo() {
 
             <div className="demo-grid">
                 <section className="card">
+                    <div className="field-group" style={{ marginBottom: "16px" }}>
+                        <label className="field-label">FHE Operation Price (ETH/compute unit)</label>
+                        <input
+                            type="text"
+                            className="text-input"
+                            defaultValue="0.002"
+                            placeholder="e.g. 0.002 ETH"
+                        />
+                    </div>
+
                     <div className="action-row">
                         <button className="primary-btn" onClick={handleGrantPermission}>
                             Grant Processing Permission

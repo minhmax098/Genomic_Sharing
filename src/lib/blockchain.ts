@@ -225,3 +225,17 @@ export async function requestLimitedAccess(tokenId: number, operationsNumber: nu
     await tx.wait();
     return tx.hash;
 }
+
+
+// Buyer Dashboard: get remaining FHE computation quota from SMC
+export async function getOperationsBalance(tokenId: number, buyer: string): Promise<number> {
+    const registry = await getRegistryReadContract();
+
+    try {
+        const balance = await registry.operationsBalance(tokenId, buyer);
+        return Number(balance);
+    } catch (error) {
+        console.warn("Could not read operations balance from contract:", error);
+        return 0;;
+    }
+}
