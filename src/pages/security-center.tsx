@@ -205,8 +205,20 @@ export default function SecurityCenter() {
             setIsFinished(true);
 
         } catch (error: unknown) {
-            const errorMessage =
-                error instanceof Error ? error.message : "An unknown error occurred";
+            // const errorMessage =
+            //     error instanceof Error ? error.message : "An unknown error occurred";
+            // setStatus("Error: " + errorMessage);
+            // setIsProcessing(false);
+            // setIsFinished(false);
+
+            let errorMessage = "An unknown error occurred";
+            if (error instanceof Error) {
+                if (error.message.includes("0x195e9025") || error.message.includes("reverted")) {
+                    errorMessage = "Smart Contract Revert: Token ID already exists or unauthorized sequencer node. Please try a different Token ID.";
+                } else {
+                    errorMessage = error.message;
+                }
+            }
             setStatus("Error: " + errorMessage);
             setIsProcessing(false);
             setIsFinished(false);
