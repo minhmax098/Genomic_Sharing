@@ -44,41 +44,6 @@ export default function OwnerDemo() {
                 </button>
             </div>
 
-            {/* <div className="demo-grid">
-                <section className="card">
-                    <div className="field-group" style={{ marginBottom: "16px" }}>
-                        <label className="field-label">FHE Operation Price (ETH/compute unit)</label>
-                        <input
-                            type="text"
-                            className="text-input"
-                            defaultValue="0.002"
-                            placeholder="e.g. 0.002 ETH"
-                        />
-                    </div>
-
-                    <div className="action-row">
-                        <button className="primary-btn" onClick={handleGrantPermission}>
-                            Grant Processing Permission
-                        </button>
-                    </div>
-
-                    <div className="status-box" style={{ marginTop: "20px" }}>
-                        <span>Current status</span>
-                        <strong>{status || "Waiting for Owner authorization..."}</strong>
-                    </div>
-                </section>
-
-                <aside className="card">
-                    <h3>Owner's Duty</h3>
-                    <ul className="flow-list">
-                        <li>Maintain ownership of Raw Genomic Data (RGD).</li>
-                        <li>Grant permission to the trusted Sequencing Center.</li>
-                        <li>Define access policies and pricing.</li>
-                        <li>Allow technical processing, encryption, and registration.</li>
-                    </ul>
-                </aside>
-            </div> */}
-
             <div className="demo-grid">
                 <section className="card">
                     {/* Cấu hình giá cho cả 2 luồng truy cập */}
